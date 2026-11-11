@@ -6,7 +6,7 @@ description: Prepare and verify a release. Use when implementation and reviews a
 # Prepare the release
 
 1. Summarize the change, test results, visual review, known risks, and rollback path. Mark missing evidence.
-2. Check the project's release and security requirements.
+2. Check the project's release and security requirements. Use `factory-security` to review relevant risks.
 3. Run `audit-release` before deployment. Record pending approvals. Resolve blocking findings.
 4. Request required approval before merge, external spend, or production deployment.
 5. After approval, perform the authorized release. Verify production health and report the evidence.

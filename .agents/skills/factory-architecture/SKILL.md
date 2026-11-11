@@ -5,10 +5,11 @@ description: Define technical architecture and scale targets. Use after product 
 
 # Define the architecture
 
-1. Read the approved scope and relevant technical preferences.
-2. Ask for expected users, peak concurrency, traffic, data volume, growth, availability, and budget. Mark unknown values. Do not invent targets.
-3. Propose a simple architecture for the confirmed scale. Show assumptions, alternatives, costs, risks, and limits. Explain when the design must change.
-4. Define security, privacy, operational, and recovery needs. Mark choices that need more evidence.
-5. Ask Chintan to approve material decisions. Record the architecture, scale targets, assumptions, and open questions.
+1. Read the scope, relevant technical preferences, and affected systems. Record existing contracts and constraints.
+2. Identify expected users, peak concurrency, traffic, data volume, growth, availability, and budget. Mark unknown values. Do not invent targets.
+3. Model the domain, data ownership, state transitions, interfaces, and module boundaries. Identify invalid states and failure modes.
+4. Compare at least two materially different designs when the decision is non-trivial. Assess complexity, scale, cost, security, operations, and recovery. Prefer the smallest design that meets the requirements.
+5. Record the chosen design, alternatives, trade-offs, assumptions, limits, and evidence. State when the design must change.
+6. Obtain required agreement for material decisions. Do not treat an assumption as a user decision.
 
 Do not install services or spend money. Send the output to `audit-architecture` before handoff.

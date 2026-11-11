@@ -1,13 +1,13 @@
 ---
 name: factory-idea
-description: Explore a raw product idea and identify decisions. Use when Chintan wants to shape a new product idea.
+description: Explore a raw product idea and identify decisions. Use when the user wants to shape a new product idea.
 ---
 
 # Explore the idea
 
-1. Ask who will use the product and what problem it solves.
-2. State assumptions. Offer up to three distinct directions and their trade-offs.
-3. Recommend the smallest useful outcome. Ask Chintan to choose the direction.
-4. Record the chosen outcome, users, constraints, and open questions in the project context.
+1. Identify the users and the problem from the request and available evidence.
+2. State assumptions. Compare up to three distinct directions and their trade-offs.
+3. Select the smallest useful outcome within authorized scope. Ask only when a decision is required or missing information blocks progress.
+4. Record the outcome, users, constraints, assumptions, and open questions in the project context.
 
 Do not invent approval or start implementation. At the stage change, hand `factory-spec` the goal, confirmed decisions, artifact paths, open questions, and next action. Do not pass the full conversation.

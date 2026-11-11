@@ -1,6 +1,8 @@
 # Software Factory
 
-A human-directed workflow for turning a product idea into a release. It uses small agent skills, stage audits, project memory, and explicit approval gates.
+A draft software factory for turning product ideas into verified releases. It aims for engineering rigor: evidence-based decisions, small changes, meaningful tests, and minimal unnecessary output. Its goal is autonomous execution within authorized boundaries.
+
+Inspired by [Poteto's pstack](https://github.com/cursor/plugins/tree/main/pstack), particularly its engineering principles and task-specific playbooks. This project adapts those ideas to a product-to-release workflow with design taste and scale planning.
 
 **Status: early draft.** The repository contains instructions and review checklists. It is not an autonomous orchestration engine. The skills, their routing, and the complete workflow have not been validated on a product.
 
@@ -26,6 +28,9 @@ The stages can overlap when the work permits. The user decides product scope, de
 | Stage audits | Ten small audit skills give each stage a focused checklist. A self-audit is not independent review. |
 | Release | The release skill calls for audits before and after deployment. A pre-deployment audit pass does not grant deployment approval. |
 | Taste and memory | A local index records confirmed taste separately from hypotheses. Project context, plans, and decisions carry knowledge between sessions. |
+| Routing and recovery | Draft skills select a task-specific route and describe safe recovery. They do not enforce transitions or restart processes. |
+| Security and evaluation | Draft skills describe security checks and reproducible workflow tests. Their coverage and automatic execution are untested. |
+| Learning | A draft skill captures lessons and suggests tests or workflow changes within authorized scope. |
 | Cost and delegation | The instructions prefer direct work unless authorized delegation offers a clear benefit. They do not select a model or enforce a budget. |
 | Clear language | The repository includes an MIT-licensed upstream ASD-STE100-inspired skill. It does not include the official dictionary or certify compliance. |
 
@@ -33,7 +38,7 @@ These are **instructions**, not proof that agents will follow them or that the c
 
 ## What remains untested?
 
-**Live routing** means whether a real agent session discovers the right skills and loads them at the right time. A file can have valid frontmatter and still not be selected when needed. We have not yet verified discovery after the latest changes, automatic selection, audit invocation, or context use.
+**Live routing** means whether a real agent session discovers the right skills and loads them at the right time. Pi listed the original stage skills after reload. We have not verified discovery of the latest additions, automatic selection, audit invocation, or context use.
 
 **A product walkthrough** means trying the entire flow on a real, small product: capture an idea, agree on scope and design, set scale targets, build, test, review, and prepare a release. We have not run that end-to-end exercise. It would show whether the handoffs preserve decisions, whether approvals stop work at the right places, and whether the output meets the acceptance criteria.
 
@@ -45,16 +50,17 @@ This compares the draft with [Poteto's pstack](https://github.com/cursor/plugins
 
 | Dimension | This factory | pstack |
 |---|---|---|
-| Main focus | A user-led path from raw product idea through design and release. | Engineering rigor: better, verifiable code and less unnecessary output. |
-| Routing | Stage skills and handoffs are instructions. Automatic routing is untested. | `poteto-mode` selects task-specific playbooks and invokes skills. |
+| Main focus | Product-to-release work with engineering rigor, user taste, and an autonomous execution goal. | Engineering rigor: better, verifiable code and less unnecessary output. |
+| Routing | Draft routing skill and bug, feature, and refactor playbooks. Automatic routing is untested. | `poteto-mode` selects task-specific playbooks and invokes skills. |
 | Design taste | Explicit minimalist baseline, competitor-flow research, and a taste index. | Includes experience-first principles and specialized workflows; it is not centered on this user's taste profile. |
-| Architecture | An explicit architecture and scale-target stage. | An `architect` skill and engineering principles address design before implementation. |
+| Architecture | A draft skill covers scale, contracts, data ownership, interfaces, alternatives, and failure modes. | An `architect` skill and engineering principles address design before implementation. |
 | Review | One small checklist per factory stage. Independent review is conditional. | Includes specialized review and multi-model workflows, including `interrogate`. |
 | Memory | Project files and a draft taste index. Cross-project memory is unresolved. | Includes `reflect`, `correct`, and other skills for improving workflows and encoding lessons. |
+| Autonomous execution | A draft skill describes an execution loop. No scheduler or restart engine exists yet. | Provides autonomous-run and orchestration playbooks, subject to harness capabilities. |
 | Parallel work | Allowed only with authorization and a clear benefit. No model router is implemented here. | Provides model routing and parallel workflows such as `arena` and `swarm`. |
 | Maturity | Draft instructions; no product walkthrough yet. | A broader published skill stack with many playbooks and harness integrations. |
 
-The approaches are complementary. This project focuses on the product journey and the user's decisions. pstack offers deeper engineering playbooks. Neither description proves quality, cost savings, or safety.
+The approaches are complementary. This project combines the product journey, user taste, and engineering rigor. pstack offers deeper engineering playbooks. Neither description proves quality, cost savings, or safety.
 
 ## Use in Pi
 
