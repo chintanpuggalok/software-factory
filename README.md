@@ -83,7 +83,19 @@ A Pi user can review this repository and install its skills from GitHub:
 pi install git:github.com/chintanpuggalok/software-factory
 ```
 
-Run `/reload` in an active session. Pi loads the package skills globally, but does not create or automatically load a personal preference index. Run `/skill:factory-preferences` to manage preferences. To load relevant preferences at project startup, add a short instruction to your own global agent rules after reviewing it. Keep your index at `~/.pi/agent/preferences/index.md`; do not commit personal preferences to a public repository.
+For a new project, choose a location and start Pi there:
+
+```sh
+mkdir -p /path/to/my-project
+cd /path/to/my-project
+pi
+```
+
+If you have a separate `project-start` skill installed, run `/skill:project-start` first. Then run `/skill:factory-idea` and describe your idea. Without `project-start`, ask Pi to load the project instructions and context before starting.
+
+Run `/reload` in an active session after installation. Installing the skills does not start an autonomous factory. The coordinator is still a prototype.
+
+Pi loads the package skills globally, but does not create or automatically load a personal preference index. Run `/skill:factory-preferences` to manage preferences. To load relevant preferences at project startup, add a short instruction to your own global agent rules after reviewing it. Keep your index at `~/.pi/agent/preferences/index.md`; do not commit personal preferences to a public repository.
 
 This package contains all factory skills, not just preference memory. A project-local copy can create name collisions. The project rules refer to optional global `project-start`, `pi-subagents`, and autoresearch guidance that is not included here. Other users must provide equivalent rules or adapt those references. A local package install and skill discovery passed in an isolated Pi configuration. GitHub installation and cross-project preference loading have not been tested.
 
