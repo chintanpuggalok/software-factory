@@ -16,6 +16,7 @@
 - Pi lists the original stage skills after reload. Automatic routing and a product walkthrough remain untested.
 - Added draft skills for routing, recovery, security, evaluation, and learning. See `research/starred-factories.md`.
 - A user-wide preference index exists outside this repository. An isolated local Pi install discovered all 28 package skills. GitHub installation and cross-project preference loading remain untested.
+- A deterministic coordinator simulator and read-only Pi adapter pass nine tests. One real read-only Pi prompt returned the expected text. The adapter does not execute the factory workflow or deploy.
 - Existing skill approval instructions predate the autonomous goal and require review. The goal does not authorize new spending, installations, or delegation.
 
 ## Confirmed expansion
@@ -25,7 +26,7 @@
 - Add task-specific playbook routing and engineering rigor inspired by pstack.
 
 ## Proposed approach
-- Start with a local Pi orchestration loop. See `artifacts/orchestrator-proposal.md` and `artifacts/complete-idea-review.md`. The architecture needs user agreement.
+- The user approved a local Pi-based coordinator and stated that the account is subscription-based. The adapter cannot verify billing or enforce a dollar limit. External-effect recovery remains unimplemented. See `artifacts/coordinator-test.md`.
 
 ## Open decisions
 - Orchestration architecture, runtime, prepaid-only enforcement, delegation permissions, and deployment targets.

@@ -1,16 +1,14 @@
-# Active milestone: draft and validate factory skills
+# Active milestone: build and test the local coordinator
 
 ## Goal
-Create minimal, explicit skills for the product cycle and taste memory.
+Build a Pi-based coordinator with durable project-local state. Test an end-to-end run against a simulated release.
 
 ## Acceptance criteria
-- Each stage has a clear trigger, inputs, steps, output, and boundary.
-- User decisions and approval gates remain explicit.
-- Taste records distinguish user decisions from agent hypotheses.
-- Each stage has an audit with findings and a clear outcome.
-- Skills use portable frontmatter and pass local structural checks.
-- Factory instructions follow ASD-STE100, verified against the applicable standard.
-- A real product walkthrough tests routing and handoffs before adoption.
+- State transitions, evidence, audit gates, and restart recovery are tested.
+- A simulated product run reaches a simulated release. Failure cases do not advance.
+- Real model calls remain blocked when prepaid-only enforcement cannot be verified.
+- Existing skill and preference boundaries remain explicit.
+- A real product walkthrough and formal ASD-STE100 compliance remain separate unverified gates.
 
 ## Completed
 - Drafted stage skills, added selective-loading rules, and created a factory-local taste index.
@@ -22,11 +20,12 @@ Create minimal, explicit skills for the product cycle and taste memory.
 - Added draft task playbooks, architecture guidance, and an autonomous-run skill inspired by pstack. These instructions are not an orchestration engine.
 - Added a user-wide preference index, preference skill, and Pi package manifest. An isolated local Pi installation discovered 28 skills without diagnostics. GitHub installation and cross-project preference loading remain untested.
 - Completed a self-review of the project. See `artifacts/end-to-end-review.md`.
+- Implemented a local deterministic simulator, read-only Pi adapter, and MIT license. Nine tests pass. One real read-only Pi prompt returned the expected text. See `artifacts/coordinator-test.md`.
 - Live routing and product execution remain untested.
 - The first review is in `artifacts/skill-review.md`. It predates the stage-specific audits.
 
 ## Next action
-Review the proposed engine architecture with Chintan. Then test skill routing and handoffs on a bounded product idea.
+Identify a provider-supported hard spending limit. Then implement stage execution and safe recovery for external effects.
 
 ## Blockers
-The engine architecture, provider spending controls, delegation, and deployment targets remain open. Cross-project preference loading is untested. Access to the applicable ASD-STE100 standard and compliance verification are needed.
+The adapter cannot verify billing or enforce a dollar limit. Full stage execution and a real deployment target remain open. Cross-project preference loading is untested. Access to the applicable ASD-STE100 standard and compliance verification are needed.

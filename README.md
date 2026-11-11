@@ -4,7 +4,7 @@ A draft software factory for turning product ideas into verified releases. It ai
 
 Inspired by [Poteto's pstack](https://github.com/cursor/plugins/tree/main/pstack), particularly its engineering principles and task-specific playbooks. This project adapts those ideas to a product-to-release workflow with design taste and scale planning.
 
-**Status: early draft.** The repository contains instructions and review checklists. It is not an autonomous orchestration engine. The skills, their routing, and the complete workflow have not been validated on a product.
+**Status: prototype.** A deterministic simulator records stage and audit results in project-local state. A separate read-only adapter can make one Pi request after user attestation. It does not execute the factory stages, build a product, or deploy. Live routing and a real product walkthrough remain untested.
 
 ## Mental map
 
@@ -36,6 +36,15 @@ The stages can overlap when the work permits. The goal is to work autonomously w
 
 These are **instructions**, not proof that agents will follow them or that the checks will run.
 
+## Run the simulator
+
+```sh
+python3 factory.py /path/to/existing/test-project --goal "Example product"
+python3 -m unittest discover -s tests -v
+```
+
+The simulator creates `.factory/state.json` in the target directory. It does not write product code or make external calls. Repeat the same command to resume a simulated run. `--fail-stage verify` simulates a failed audit. `--mode pi` makes one read-only Pi request only when the user passes `--subscription-confirmed`. The flag is an attestation, not billing verification. No dollar limit is enforced. Do not use simulator results as production evidence.
+
 ## What remains untested?
 
 **Live routing** means whether a real agent session discovers the right skills and loads them at the right time. Pi listed the original stage skills after reload. We have not verified discovery of the latest additions, automatic selection, audit invocation, or context use.
@@ -56,7 +65,7 @@ This compares the draft with [Poteto's pstack](https://github.com/cursor/plugins
 | Architecture | A draft skill covers scale, contracts, data ownership, interfaces, alternatives, and failure modes. | An `architect` skill and engineering principles address design before implementation. |
 | Review | One small checklist per factory stage. Independent review is conditional. | Includes specialized review and multi-model workflows, including `interrogate`. |
 | Memory | Project files and an optional user-wide preference index. Cross-project preference loading is untested. | Includes `reflect`, `correct`, and other skills for improving workflows and encoding lessons. |
-| Autonomous execution | A draft skill describes an execution loop. No scheduler or restart engine exists yet. | Provides autonomous-run and orchestration playbooks, subject to harness capabilities. |
+| Autonomous execution | A simulator exercises stage gates and recovery. A separate read-only Pi call was tested. Full workflow execution is not implemented. | Provides autonomous-run and orchestration playbooks, subject to harness capabilities. |
 | Parallel work | Allowed only with authorization and a clear benefit. No model router is implemented here. | Provides model routing and parallel workflows such as `arena` and `swarm`. |
 | Maturity | Draft instructions; no product walkthrough yet. | A broader published skill stack with many playbooks and harness integrations. |
 
