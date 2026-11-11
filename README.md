@@ -17,7 +17,7 @@ Idea → Spec → Design → Architecture → Plan → Build → Verify → Rele
                   Taste and project memory
 ```
 
-The stages can overlap when the work permits. The user decides product scope, design direction, material technical choices, and required approvals.
+The stages can overlap when the work permits. The goal is to work autonomously within authorized scope. Current skills still contain approval prompts that need review against that goal.
 
 | Area | Current implementation |
 |---|---|
@@ -27,7 +27,7 @@ The stages can overlap when the work permits. The user decides product scope, de
 | Build and checks | Skills describe bounded implementation, tests, independent user scenarios when feasible, and browser-based visual review when available. |
 | Stage audits | Ten small audit skills give each stage a focused checklist. A self-audit is not independent review. |
 | Release | The release skill calls for audits before and after deployment. A pre-deployment audit pass does not grant deployment approval. |
-| Taste and memory | A local index records confirmed taste separately from hypotheses. Project context, plans, and decisions carry knowledge between sessions. |
+| Taste and memory | A project index and an optional user-wide preference skill separate confirmed preferences from hypotheses. Cross-project preference loading is not yet tested. |
 | Routing and recovery | Draft skills select a task-specific route and describe safe recovery. They do not enforce transitions or restart processes. |
 | Security and evaluation | Draft skills describe security checks and reproducible workflow tests. Their coverage and automatic execution are untested. |
 | Learning | A draft skill captures lessons and suggests tests or workflow changes within authorized scope. |
@@ -55,7 +55,7 @@ This compares the draft with [Poteto's pstack](https://github.com/cursor/plugins
 | Design taste | Explicit minimalist baseline, competitor-flow research, and a taste index. | Includes experience-first principles and specialized workflows; it is not centered on this user's taste profile. |
 | Architecture | A draft skill covers scale, contracts, data ownership, interfaces, alternatives, and failure modes. | An `architect` skill and engineering principles address design before implementation. |
 | Review | One small checklist per factory stage. Independent review is conditional. | Includes specialized review and multi-model workflows, including `interrogate`. |
-| Memory | Project files and a draft taste index. Cross-project memory is unresolved. | Includes `reflect`, `correct`, and other skills for improving workflows and encoding lessons. |
+| Memory | Project files and an optional user-wide preference index. Cross-project preference loading is untested. | Includes `reflect`, `correct`, and other skills for improving workflows and encoding lessons. |
 | Autonomous execution | A draft skill describes an execution loop. No scheduler or restart engine exists yet. | Provides autonomous-run and orchestration playbooks, subject to harness capabilities. |
 | Parallel work | Allowed only with authorization and a clear benefit. No model router is implemented here. | Provides model routing and parallel workflows such as `arena` and `swarm`. |
 | Maturity | Draft instructions; no product walkthrough yet. | A broader published skill stack with many playbooks and harness integrations. |
@@ -66,7 +66,17 @@ The approaches are complementary. This project combines the product journey, use
 
 Pi discovers project skills under `.agents/skills/` when the project is in scope. Open Pi in this project and run `/reload` after changing the skills. Inspect Pi's skill list or startup diagnostics. Invoke a stage directly, for example `/skill:factory-idea`, when you need to force selection.
 
-These instructions are project-local. They do not make the skills available in other projects. The project rules refer to optional global `project-start`, `pi-subagents`, and autoresearch guidance that is not included here. Other users must provide equivalent rules or adapt those references. Cross-project distribution, shared taste storage, and compatibility with other agents remain open decisions.
+### Install for other projects
+
+A Pi user can review this repository and install its skills from GitHub:
+
+```sh
+pi install git:github.com/chintanpuggalok/software-factory
+```
+
+Run `/reload` in an active session. Pi loads the package skills globally, but does not create or automatically load a personal preference index. Run `/skill:factory-preferences` to manage preferences. To load relevant preferences at project startup, add a short instruction to your own global agent rules after reviewing it. Keep your index at `~/.pi/agent/preferences/index.md`; do not commit personal preferences to a public repository.
+
+This package contains all factory skills, not just preference memory. A project-local copy can create name collisions. The project rules refer to optional global `project-start`, `pi-subagents`, and autoresearch guidance that is not included here. Other users must provide equivalent rules or adapt those references. A local package install and skill discovery passed in an isolated Pi configuration. GitHub installation and cross-project preference loading have not been tested.
 
 Start with a small idea. Review the decisions and artifacts at each stage. Do not interpret an agent's audit result as permission to spend, merge, or deploy.
 

@@ -15,6 +15,7 @@
 - The project-local `asd-ste100` skill is pinned to upstream commit `a4905d922500dd7530ca8a0eb9e4940494255709`. Its linter has not been executed.
 - Pi lists the original stage skills after reload. Automatic routing and a product walkthrough remain untested.
 - Added draft skills for routing, recovery, security, evaluation, and learning. See `research/starred-factories.md`.
+- A user-wide preference index exists outside this repository. An isolated local Pi install discovered all 28 package skills. GitHub installation and cross-project preference loading remain untested.
 - Existing skill approval instructions predate the autonomous goal and require review. The goal does not authorize new spending, installations, or delegation.
 
 ## Confirmed expansion
@@ -27,8 +28,8 @@
 - Start with a local Pi orchestration loop. See `artifacts/orchestrator-proposal.md` and `artifacts/complete-idea-review.md`. The architecture needs user agreement.
 
 ## Open decisions
-- Orchestration architecture, runtime, spending limits, delegation permissions, and deployment gates.
-- Shared taste storage across projects and privacy boundaries.
+- Orchestration architecture, runtime, prepaid-only enforcement, delegation permissions, and deployment targets.
+- Cross-project installation and preference discovery need validation. Confirm privacy and conflict behavior in other agent environments.
 - Access to the applicable ASD-STE100 standard and controlled vocabulary, and a method to verify compliance.
 
 See `PLAN.md`, `decisions.md`, and `research/factory-inspirations.md`.

@@ -5,7 +5,7 @@ description: Capture and apply the user's technical and design preferences. Use 
 
 # Maintain taste
 
-1. Read the available taste index and relevant project decisions. If no index exists, create a project-local index when needed. Load only records needed for this task. Keep shared preferences separate from project-specific choices.
+1. Read the available taste index and relevant project decisions. Use `factory-preferences` for user-wide preferences. If no project index exists, create one when needed. Load only records needed for this task. Keep user-wide preferences separate from project-specific choices.
 2. Capture the choice, its context, the reason, and a source or example. Record rejected alternatives when useful.
 3. Label explicit user preferences as confirmed. Label agent inferences as hypotheses. Ask before promoting a hypothesis to a general preference.
 4. Apply confirmed preferences only when relevant. Report conflicts and ask when they affect a consequential choice.

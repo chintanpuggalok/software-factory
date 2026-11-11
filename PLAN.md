@@ -20,6 +20,8 @@ Create minimal, explicit skills for the product cycle and taste memory.
 - Checked 21 skill frontmatters, local links, STE support files, and release gate order. See `artifacts/global-integration-review.md`.
 - Reviewed starred repositories. Added draft routing, recovery, security, evaluation, and learning skills. See `research/starred-factories.md`.
 - Added draft task playbooks, architecture guidance, and an autonomous-run skill inspired by pstack. These instructions are not an orchestration engine.
+- Added a user-wide preference index, preference skill, and Pi package manifest. An isolated local Pi installation discovered 28 skills without diagnostics. GitHub installation and cross-project preference loading remain untested.
+- Completed a self-review of the project. See `artifacts/end-to-end-review.md`.
 - Live routing and product execution remain untested.
 - The first review is in `artifacts/skill-review.md`. It predates the stage-specific audits.
 
@@ -27,4 +29,4 @@ Create minimal, explicit skills for the product cycle and taste memory.
 Review the proposed engine architecture with Chintan. Then test skill routing and handoffs on a bounded product idea.
 
 ## Blockers
-Provider, spending, delegation, deployment, and shared memory choices remain open. Access to the applicable ASD-STE100 standard and compliance verification are needed.
+The engine architecture, provider spending controls, delegation, and deployment targets remain open. Cross-project preference loading is untested. Access to the applicable ASD-STE100 standard and compliance verification are needed.

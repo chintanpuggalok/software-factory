@@ -1,0 +1,10 @@
+{
+  "name": "software-factory-skills",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Draft product-to-release skills for Pi",
+  "keywords": ["pi-package"],
+  "pi": {
+    "skills": ["./.agents/skills"]
+  }
+}
