@@ -3,12 +3,17 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { ExtensionAPI } from '@earendil-works/pi-coding-agent';
 import {
+  applyProgress,
   buildCoordinatorArgs,
   buildSimulationArgs,
+  emptyModel,
   parsePlanArgs,
+  parseProgress,
   readStatus,
+  renderRunLines,
   runCoordinator,
   summarizeStatus,
+  verificationFromStatus,
 } from './factory-core.mjs';
 
 const PACKAGE_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -46,16 +51,29 @@ async function confirmSpend(ctx: any, args: string, calls: number) {
   return { goal, options };
 }
 
-async function run(ctx: any, args: string[], workspace: string) {
+function paint(ctx: any, model: any) {
+  const width = Math.max(40, Math.min(96, process.stdout.columns || 64));
+  ctx.ui.setWidget?.('factory-status', renderRunLines(model, width), { placement: 'aboveEditor' });
+}
+
+async function run(ctx: any, args: string[], workspace: string, model: any) {
   ctx.ui.setStatus?.('factory', 'running…');
+  paint(ctx, model);
   const result = await runCoordinator({
     script: SCRIPT,
     workspace,
     args,
     onLine: (line: string, stream: string) => {
       if (stream === 'stderr' && line.startsWith('BLOCKED')) ctx.ui.notify?.(line, 'error');
+      const event = parseProgress(line);
+      if (event) {
+        applyProgress(model, event);
+        paint(ctx, model);
+      }
     },
   });
+  model.verification = verificationFromStatus(await readStatus(workspace));
+  paint(ctx, model);
   ctx.ui.setStatus?.('factory', undefined);
   return result;
 }
@@ -73,7 +91,8 @@ export default function (pi: ExtensionAPI) {
     handler: async (args, ctx) => {
       const { goal, error } = parsePlanArgs(args);
       if (error) return output(ctx, `Error: ${error}`);
-      const result = await run(ctx, buildSimulationArgs({ workspace: ctx.cwd, goal }), ctx.cwd);
+      const model = emptyModel({ goal, runtime: 'simulate', limit: 0 });
+      const result = await run(ctx, buildSimulationArgs({ workspace: ctx.cwd, goal }), ctx.cwd, model);
       if (result.error) return output(ctx, `Error: ${result.error}`);
       output(ctx, summarizeStatus(await readStatus(ctx.cwd)));
       if (result.code !== 0) output(ctx, `Simulation stopped with code ${result.code}.`);
@@ -87,9 +106,10 @@ export default function (pi: ExtensionAPI) {
       if (parsed.cancelled) return output(ctx, 'Cancelled.');
       if (parsed.error) return output(ctx, `Error: ${parsed.error}`);
       await remember(ctx.cwd, { action: 'plan', goal: parsed.goal, options: parsed.options });
+      const model = emptyModel({ goal: parsed.goal, limit: 10 });
       const result = await run(ctx,
         buildCoordinatorArgs({ workspace: ctx.cwd, goal: parsed.goal, options: parsed.options }),
-        ctx.cwd);
+        ctx.cwd, model);
       if (result.error) return output(ctx, `Error: ${result.error}`);
       output(ctx, summarizeStatus(await readStatus(ctx.cwd)));
       if (result.code !== 0) {
@@ -111,9 +131,10 @@ export default function (pi: ExtensionAPI) {
       if (parsed.cancelled) return output(ctx, 'Cancelled.');
       if (parsed.error) return output(ctx, `Error: ${parsed.error}`);
       await remember(ctx.cwd, { action: 'build', goal: parsed.goal, options: parsed.options });
+      const model = emptyModel({ goal: parsed.goal, limit: 13 });
       const result = await run(ctx,
         buildCoordinatorArgs({ workspace: ctx.cwd, goal: parsed.goal, options: parsed.options, build: true }),
-        ctx.cwd);
+        ctx.cwd, model);
       if (result.error) return output(ctx, `Error: ${result.error}`);
       output(ctx, summarizeStatus(await readStatus(ctx.cwd)));
       if (result.code !== 0) {
@@ -134,9 +155,10 @@ export default function (pi: ExtensionAPI) {
         if (!ok) return output(ctx, 'Cancelled.');
       }
       const build = last.action === 'build';
+      const model = emptyModel({ goal: last.goal, limit: build ? 13 : 10 });
       const result = await run(ctx,
         buildCoordinatorArgs({ workspace: ctx.cwd, goal: last.goal, options: last.options || {}, build }),
-        ctx.cwd);
+        ctx.cwd, model);
       if (result.error) return output(ctx, `Error: ${result.error}`);
       output(ctx, summarizeStatus(await readStatus(ctx.cwd)));
       if (result.code !== 0) output(ctx, `Resume stopped with code ${result.code}.`);

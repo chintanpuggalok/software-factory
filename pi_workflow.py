@@ -50,7 +50,7 @@ def _load_state(path, goal, runtime_name):
 def run_plan(workspace, goal, *, subscription_confirmed=False, invoke_fn=None, max_new_stages=None,
              research_query=None, research_fn=research_web.discover,
              reference_urls=(), reference_fn=research_web.inspect_references,
-             runtime=None):
+             runtime=None, progress=None):
     workspace = Path(workspace).resolve()
     if not workspace.is_dir() or not isinstance(goal, str) or not goal.strip():
         raise ValueError("An existing workspace and non-empty goal are required")
@@ -58,6 +58,7 @@ def run_plan(workspace, goal, *, subscription_confirmed=False, invoke_fn=None, m
         raise pi_adapter.PrepaidUnavailable("Spend confirmation is required; no runtime call was made")
     runtime = runtime or runtime_adapter.get_runtime()
     call = invoke_fn or (lambda w, p, c: _checked(runtime, w, p, c))
+    notify = progress or (lambda event: None)
     directory = workspace / ".factory"
     directory.mkdir(exist_ok=True)
     path = directory / "pi-plan.json"
@@ -73,7 +74,9 @@ def run_plan(workspace, goal, *, subscription_confirmed=False, invoke_fn=None, m
             if not isinstance(max_new_stages, int) or isinstance(max_new_stages, bool) or max_new_stages < 0:
                 raise ValueError("Invalid stage limit")
             remaining = remaining[:max_new_stages]
-        for stage in remaining:
+        for offset, stage in enumerate(remaining):
+            notify({"event": "stage_start", "stage": stage,
+                    "index": len(state["stages"]) + 1, "total": len(STAGES)})
             if stage == "design" and reference_urls:
                 previous_refs = state.get("references")
                 if previous_refs and [x["url"] for x in previous_refs] != list(reference_urls):
@@ -116,8 +119,12 @@ def run_plan(workspace, goal, *, subscription_confirmed=False, invoke_fn=None, m
             if not verdict.startswith("PASS"):
                 state["blocked"] = {"stage": stage, "output": output, "audit": verdict}
                 factory.save(path, state)
+                notify({"event": "stage_result", "stage": stage, "passed": False,
+                        "verdict": verdict[:300], "blocked": True})
                 return state, f"Audit did not pass for {stage}: {verdict[:200]}"
             state.pop("blocked", None)
             state["stages"].append({"name": stage, "output": output, "audit": verdict})
             factory.save(path, state)
+            notify({"event": "stage_result", "stage": stage, "passed": True,
+                    "verdict": verdict[:300], "blocked": False})
         return state, None

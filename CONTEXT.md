@@ -19,7 +19,7 @@
 - An experimental workflow can plan and generate one static HTML prototype. A calculator test passed model-audited planning, fake-DOM checks, and selected isolated Chromium checks. Browser checks found contrast defects that were repaired manually. The coordinator does not deploy.
 - Skills now use one audit verdict contract. Every stage skill names its audit and advances only on PASS. An audit removed three overlapping skills and merged their unique content into route, taste, and learn.
 - Execution now goes through a selectable runtime adapter. Only `pi` is implemented. Codex and Claude fail closed. See `docs/runtime-adapters.md`.
-- A Pi extension provides `/factory-status`, `/factory-simulate`, `/factory-plan`, `/factory-build`, and `/factory-resume`. The CLI is optional. The extension and its core tests were exercised without model calls.
+- A Pi extension provides `/factory-status`, `/factory-simulate`, `/factory-plan`, `/factory-build`, and `/factory-resume`. The CLI is optional. The extension and its ten core tests were exercised without model calls. It draws a bounded stage widget from coordinator progress lines.
 - An independent static review with `opencode-go/deepseek-v4.1-flash` accepted the gate-plumbing findings now applied. A live model smoke test of the new verdict contract was blocked by a provider usage limit.
 - Existing skill approval instructions predate the autonomous goal and require review. The goal does not authorize new spending, installations, or delegation.
 

@@ -71,7 +71,7 @@ export function parsePlanArgs(text) {
 
 export function buildCoordinatorArgs({ workspace, goal, options = {}, build = false }) {
   if (!workspace || !goal) throw new Error('workspace and goal are required');
-  const args = [workspace, '--goal', goal];
+  const args = [workspace, '--goal', goal, '--progress'];
   if (build) {
     args.push('--mode', 'pi-plan', '--subscription-confirmed', '--build-static');
     if (options.researchQuery) args.push('--research-query', options.researchQuery);
@@ -83,7 +83,7 @@ export function buildCoordinatorArgs({ workspace, goal, options = {}, build = fa
 
 export function buildSimulationArgs({ workspace, goal }) {
   if (!workspace || !goal) throw new Error('workspace and goal are required');
-  return [workspace, '--goal', goal];
+  return [workspace, '--goal', goal, '--progress'];
 }
 
 export function runCoordinator({ python = 'python3', script, workspace, args, onLine, timeoutMs = 900000 }) {
@@ -144,4 +144,90 @@ export function summarizeStatus(status) {
   }
   lines.push('Static and browser checks do not prove security, full accessibility, or production readiness.');
   return lines.join('\n');
+}
+
+export const PLANNING_STAGES = ['idea', 'spec', 'design', 'architecture', 'plan'];
+
+export function emptyModel({ goal, runtime = 'pi', limit = 10 }) {
+  return {
+    goal,
+    runtime,
+    limit,
+    stages: PLANNING_STAGES.map((name) => ({ name, state: 'pending', verdict: '' })),
+    blocked: null,
+    verification: null,
+  };
+}
+
+export function parseProgress(line) {
+  if (typeof line !== 'string' || !line.startsWith('PROGRESS ')) return null;
+  try {
+    const event = JSON.parse(line.slice('PROGRESS '.length));
+    return event && typeof event.event === 'string' ? event : null;
+  } catch {
+    return null;
+  }
+}
+
+export function applyProgress(model, event) {
+  if (!event || !model) return model;
+  const row = model.stages?.find((stage) => stage.name === event.stage);
+  if (event.event === 'stage_start' && row) {
+    row.state = 'running';
+    row.verdict = '';
+  }
+  if (event.event === 'stage_result' && row) {
+    row.state = event.passed ? 'passed' : 'blocked';
+    row.verdict = typeof event.verdict === 'string' ? event.verdict : '';
+    if (!event.passed) model.blocked = { stage: event.stage, verdict: row.verdict };
+  }
+  return model;
+}
+
+const GLYPH = { pending: '○', running: '●', passed: '✓', blocked: '✗', revise: '!' };
+
+function clip(text, width) {
+  const chars = Array.from(String(text));
+  if (chars.length <= width) return String(text);
+  return chars.slice(0, Math.max(0, width - 1)).join('') + '…';
+}
+
+function padRight(text, width) {
+  const value = clip(text, width);
+  return value + ' '.repeat(Math.max(0, width - Array.from(value).length));
+}
+
+export function renderRunLines(model, width = 64) {
+  const inner = Math.max(24, Math.min(96, width)) - 2;
+  const lines = [];
+  const title = ' factory ';
+  const side = Math.max(0, inner - title.length);
+  lines.push('╭' + '─'.repeat(Math.floor(side / 2)) + title + '─'.repeat(side - Math.floor(side / 2)) + '╮');
+  const put = (text) => lines.push('│ ' + padRight(text, inner - 1) + '│');
+  put(clip(model.goal || 'untitled run', inner));
+  const done = model.stages.filter((s) => s.state === 'passed').length;
+  put(`${model.runtime} · ${done}/${model.stages.length} stages · up to ${model.limit} calls · no dollar limit`);
+  put('');
+  const visible = model.stages.slice(0, 6);
+  for (const stage of visible) {
+    const label = `${GLYPH[stage.state] || '·'} ${padRight(stage.name, 14)}${stage.state === 'running' ? 'auditing…' : stage.state}`;
+    put(label);
+  }
+  if (model.stages.length > visible.length) put(`… +${model.stages.length - visible.length} more stages`);
+  if (model.blocked) put(clip(`blocked at ${model.blocked.stage}: ${model.blocked.verdict}`, inner));
+  if (model.verification) {
+    put(clip(`static ${model.verification.static || 'unknown'} · browser ${model.verification.browser || 'unknown'}`, inner));
+  }
+  put('');
+  put('/factory-status for detail · ctrl+c stops the run');
+  lines.push('╰' + '─'.repeat(inner) + '╯');
+  return lines;
+}
+
+export function verificationFromStatus(status) {
+  if (!status) return null;
+  const staticCheck = status.verification?.status;
+  const browser = status.browser?.browser?.status;
+  if (!staticCheck && !browser) return null;
+  return { static: staticCheck || 'unknown', browser: browser || 'unknown' };
 }

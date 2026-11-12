@@ -130,6 +130,43 @@ The extension writes only under the target project's `.factory/` and `.factory-b
 --build                                Generate the prototype after a passed plan
 ```
 
+### TUI
+
+While a command runs, the extension draws a status widget above the prompt. It follows the pi-subagents pattern: a bounded box, one glyph per stage, and a single final state per row.
+
+```text
+╭────────────────────────── factory ───────────────────────────╮
+│ A local checklist app for one person                         │
+│ pi · 2/5 stages · up to 10 calls · no dollar limit           │
+│                                                              │
+│ ✓ idea          passed                                       │
+│ ✓ spec          passed                                       │
+│ ● design        auditing…                                    │
+│ ○ architecture  pending                                      │
+│ ○ plan          pending                                      │
+│                                                              │
+│ /factory-status for detail · ctrl+c stops the run            │
+╰──────────────────────────────────────────────────────────────╯
+```
+
+| Glyph | Meaning |
+|---|---|
+| `○` | Pending |
+| `●` | Running or auditing |
+| `✓` | Audit returned `PASS: evidence` |
+| `✗` | Audit returned `REVISE` or `BLOCKED` |
+
+Rules:
+
+- At most six stage rows. Extra stages collapse into `… +N more stages`.
+- A blocker replaces the empty line with `blocked at <stage>: <verdict>`.
+- After a build, one line shows `static <status> · browser <status>`.
+- The widget uses the terminal width, clamped to 96 columns, and truncates long goals.
+- The footer status line shows `factory: running…` during a run and clears at the end.
+- The final widget stays until the next run or session end.
+
+The widget is display only. It does not add accept, reject, or stop keys. Output is plain text with no theme colors yet.
+
 ### What build does
 
 1. Generates one new `.factory-build/index.html`. It never overwrites an existing prototype.
@@ -199,7 +236,8 @@ To add one, follow `docs/runtime-adapters.md`. Do not copy Pi flags into another
 - Fixed-stage planning over Pi, with one audit per stage.
 - Calculator prototype passing 13 browser acceptance actions.
 - Sandbox network isolation, interrupted-build recovery, and bounded repair.
-- 65 Python tests and 7 extension tests.
+- 65 Python tests and 10 extension tests.
+- The coordinator emits `PROGRESS` lines on stderr. The extension turns them into a live stage widget.
 - The Pi extension ran `/factory-status` and `/factory-simulate` in print mode without a CLI or model call.
 
 **Unverified:**

@@ -4,12 +4,17 @@ import { mkdtemp, mkdir, writeFile, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import {
+  applyProgress,
   buildCoordinatorArgs,
   buildSimulationArgs,
+  emptyModel,
   parsePlanArgs,
+  parseProgress,
   readStatus,
+  renderRunLines,
   runCoordinator,
   summarizeStatus,
+  verificationFromStatus,
 } from '../extensions/factory-core.mjs';
 
 test('tokenizes quoted goals', () => {
@@ -35,11 +40,11 @@ test('rejects unknown options and missing values', () => {
 });
 
 test('builds exact coordinator arguments', () => {
-  assert.deepEqual(buildSimulationArgs({ workspace: '/p', goal: 'demo' }), ['/p', '--goal', 'demo']);
+  assert.deepEqual(buildSimulationArgs({ workspace: '/p', goal: 'demo' }), ['/p', '--goal', 'demo', '--progress']);
   assert.deepEqual(buildCoordinatorArgs({
     workspace: '/p', goal: 'demo', build: true,
     options: { researchQuery: 'q', referenceUrls: ['https://a'], acceptanceFile: '/a.json' },
-  }), ['/p', '--goal', 'demo', '--mode', 'pi-plan', '--subscription-confirmed', '--build-static',
+  }), ['/p', '--goal', 'demo', '--progress', '--mode', 'pi-plan', '--subscription-confirmed', '--build-static',
     '--research-query', 'q', '--reference-url', 'https://a', '--acceptance-file', '/a.json']);
 });
 
@@ -71,4 +76,38 @@ test('reports a coordinator failure instead of throwing', async () => {
   const result = await runCoordinator({ script: path.resolve('factory.py'), workspace, args: ['/missing', '--goal', 'x'] });
   assert.equal(result.code, 2);
   assert.match(result.stderr, /BLOCKED/);
+});
+
+test('renders a bounded run box with stage glyphs', () => {
+  let model = emptyModel({ goal: 'demo' });
+  model = applyProgress(model, { event: 'stage_start', stage: 'idea' });
+  model = applyProgress(model, { event: 'stage_result', stage: 'idea', passed: true, verdict: 'PASS: ok' });
+  model = applyProgress(model, { event: 'stage_start', stage: 'spec' });
+  model.verification = { static: 'passed', browser: 'passed' };
+  const lines = renderRunLines(model, 64);
+  assert.equal(lines[0].startsWith('╭'), true);
+  assert.equal(lines.at(-1).startsWith('╰'), true);
+  assert(lines.some((line) => line.includes('✓ idea')));
+  assert(lines.some((line) => line.includes('● spec')));
+  assert(lines.some((line) => line.includes('static passed · browser passed')));
+  assert(lines.every((line) => Array.from(line).length <= 64));
+  const narrow = renderRunLines(model, 30);
+  assert(narrow.every((line) => Array.from(line).length <= 30));
+});
+
+test('shows a blocker and ignores invalid progress', () => {
+  let model = emptyModel({ goal: 'demo' });
+  model = applyProgress(model, { event: 'stage_start', stage: 'design' });
+  model = applyProgress(model, { event: 'stage_result', stage: 'design', passed: false, verdict: 'BLOCKED: no evidence' });
+  assert.match(renderRunLines(model, 80).join('\n'), /blocked at design: BLOCKED: no evidence/);
+  assert.equal(parseProgress('not a progress line'), null);
+  assert.equal(parseProgress('PROGRESS {bad json'), null);
+  assert.deepEqual(parseProgress('PROGRESS {"event":"stage_start","stage":"spec"}'),
+    { event: 'stage_start', stage: 'spec' });
+});
+
+test('maps saved verification to the widget line', () => {
+  assert.deepEqual(verificationFromStatus({ verification: { status: 'passed' }, browser: { browser: { status: 'unavailable' } } }),
+    { static: 'passed', browser: 'unavailable' });
+  assert.equal(verificationFromStatus({}), null);
 });
