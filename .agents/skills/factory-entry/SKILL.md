@@ -1,5 +1,5 @@
 ---
-name: factory
+name: factory-entry
 description: Start or resume the software factory with one call. Use when the user gives a product goal, says "factory", or returns to continue earlier work.
 ---
 

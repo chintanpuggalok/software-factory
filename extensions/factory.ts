@@ -7,7 +7,11 @@ import {
   buildCoordinatorArgs,
   buildSimulationArgs,
   emptyModel,
+  modelFromStatus,
+  renderIdleLines,
   nextAction,
+  nextActionHint,
+  parseFactoryCommand,
   parseFactoryArgs,
   parsePlanArgs,
   parseProgress,
@@ -88,40 +92,105 @@ async function run(ctx: any, args: string[], workspace: string, model: any) {
 }
 
 export default function (pi: ExtensionAPI) {
+  async function showStatus(ctx: any, goalHint = '') {
+    const status = await readStatus(ctx.cwd);
+    const entry = await readEntry(ctx.cwd);
+    const goal = goalHint || status.plan?.goal || entry?.goal || '';
+    if (!goal && !status.plan && !status.simulated && !status.verification) {
+      const width = Math.max(40, Math.min(96, process.stdout.columns || 64));
+      ctx.ui.setWidget?.('factory-status', renderIdleLines(width), { placement: 'aboveEditor' });
+      return output(ctx, 'No factory run in this project.\n/factory <goal>   plan, build, and verify\n/factory help     all commands');
+    }
+    const model = modelFromStatus(status, goal);
+    model.next = nextActionHint(nextAction(status));
+    paint(ctx, model);
+    output(ctx, `${summarizeStatus(status)}\n${model.next}`);
+    return { status, model };
+  }
+
   pi.registerCommand('factory', {
-    description: 'Start or resume the factory with one command. Plans, then builds and verifies',
+    description: 'Factory entry: status, plan, build, simulate, resume, help',
     getArgumentCompletions: (prefix: string) => {
-      const items = ['--yes', '--simulate', '--research-query=', '--reference-url=', '--acceptance-file='];
+      const items = ['status', 'plan', 'build', 'simulate', 'resume', 'help',
+        '--yes', '--simulate', '--research-query=', '--reference-url=', '--acceptance-file='];
       const matches = items.filter((i) => i.startsWith(prefix));
       return matches.length ? matches.map((value) => ({ value, label: value })) : null;
     },
     handler: async (args, ctx) => {
-      const parsed = parseFactoryArgs(args);
+      const parsed = parseFactoryCommand(args);
       if (parsed.error) return output(ctx, `Error: ${parsed.error}`);
+
+      if (parsed.command === 'help') {
+        return output(ctx, [
+          '/factory                  show status and the next step',
+          '/factory status           show saved state',
+          '/factory <goal>           plan, then build and verify',
+          '/factory plan <goal>      plan only',
+          '/factory build            build and verify from a passed plan',
+          '/factory simulate <goal>  free eight-stage simulation',
+          '/factory resume           repeat the last plan or build',
+          'options: --yes --research-query= --reference-url= --acceptance-file=',
+        ].join('\n'));
+      }
+      if (parsed.command === 'status') return void await showStatus(ctx, parsed.goal);
+
       const saved = await readEntry(ctx.cwd);
       const goal = parsed.goal || saved?.goal;
-      if (!goal) return output(ctx, 'Provide a goal once: /factory <goal>. Later runs restore it from state.');
+      if (parsed.command === 'resume') {
+        if (!saved?.goal) return output(ctx, 'No saved factory command. Start with /factory <goal>.');
+        return void await showStatus(ctx, saved.goal);
+      }
+      if (parsed.command === 'build') {
+        if (!goal) return output(ctx, 'No saved goal. Start with /factory <goal>.');
+        await writeEntry(ctx.cwd, { version: 1, goal, updatedAt: new Date().toISOString() });
+        const status = await readStatus(ctx.cwd);
+        if (nextAction(status) !== 'build' && nextAction(status) !== 'done') {
+          return output(ctx, 'No passed plan yet. Run /factory plan <goal> first.');
+        }
+        if (nextAction(status) === 'done') return void await showStatus(ctx, goal);
+        const confirmed = await confirmGoal(ctx, goal, 3, parsed.options.yes);
+        if (confirmed.cancelled) return output(ctx, 'Cancelled.');
+        if (confirmed.error) return output(ctx, `Error: ${confirmed.error}`);
+        const model = emptyModel({ goal, limit: 3 });
+        const result = await run(ctx,
+          buildCoordinatorArgs({ workspace: ctx.cwd, goal, options: parsed.options, build: true }), ctx.cwd, model);
+        model.next = nextActionHint('done');
+        paint(ctx, model);
+        if (result.code !== 0) {
+          const blocked = result.stderr.split('\n').filter((l: string) => l.startsWith('BLOCKED')).join('\n');
+          return output(ctx, blocked || `Build stopped with code ${result.code}.`);
+        }
+        return void await showStatus(ctx, goal);
+      }
+
+      if (!goal) return output(ctx, 'No goal yet. Use /factory <goal> or /factory help.');
+
       await writeEntry(ctx.cwd, { version: 1, goal, updatedAt: new Date().toISOString() });
-      if (parsed.options.simulate) {
+
+      if (parsed.command === 'simulate') {
         const model = emptyModel({ goal, runtime: 'simulate', limit: 0 });
+        model.next = 'simulated run only · no model calls';
         const result = await run(ctx, buildSimulationArgs({ workspace: ctx.cwd, goal }), ctx.cwd, model);
+        paint(ctx, model);
         output(ctx, summarizeStatus(await readStatus(ctx.cwd)));
         if (result.code !== 0) output(ctx, `Simulation stopped with code ${result.code}.`);
         return;
       }
+
       const before = await readStatus(ctx.cwd);
-      const action = nextAction(before);
-      if (action === 'done') return output(ctx, summarizeStatus(before));
+      const action = parsed.command === 'plan' ? 'plan' : nextAction(before);
+      if (action === 'done') return void await showStatus(ctx, goal);
       const calls = action === 'build' ? 3 : 13;
       const confirmed = await confirmGoal(ctx, goal, calls, parsed.options.yes);
       if (confirmed.cancelled) return output(ctx, 'Cancelled.');
       if (confirmed.error) return output(ctx, `Error: ${confirmed.error}`);
+
       let model = emptyModel({ goal, limit: calls });
       if (action === 'plan' || action === 'resume-plan') {
         const plan = await run(ctx,
           buildCoordinatorArgs({ workspace: ctx.cwd, goal, options: parsed.options }), ctx.cwd, model);
         if (plan.code !== 0) {
-          output(ctx, summarizeStatus(await readStatus(ctx.cwd)));
+          paint(ctx, model);
           const blocked = plan.stderr.split('\n').filter((l: string) => l.startsWith('BLOCKED')).join('\n');
           return output(ctx, blocked || `Plan stopped with code ${plan.code}.`);
         }
@@ -132,99 +201,20 @@ export default function (pi: ExtensionAPI) {
         const build = await run(ctx,
           buildCoordinatorArgs({ workspace: ctx.cwd, goal, options: parsed.options, build: true }), ctx.cwd, model);
         if (build.code !== 0) {
-          output(ctx, summarizeStatus(await readStatus(ctx.cwd)));
+          paint(ctx, model);
           const blocked = build.stderr.split('\n').filter((l: string) => l.startsWith('BLOCKED')).join('\n');
           return output(ctx, blocked || `Build stopped with code ${build.code}.`);
         }
       }
       await remember(ctx.cwd, { action: 'factory', goal, options: parsed.options });
-      output(ctx, summarizeStatus(await readStatus(ctx.cwd)));
+      await showStatus(ctx, goal);
     },
   });
 
   pi.registerCommand('factory-status', {
     description: 'Show the factory run, plan stages, and verification state',
-    handler: async (_args, ctx) => {
-      output(ctx, summarizeStatus(await readStatus(ctx.cwd)));
-    },
+    handler: async (_args, ctx) => { await showStatus(ctx); },
   });
 
-  pi.registerCommand('factory-simulate', {
-    description: 'Run the deterministic factory simulation. No model calls',
-    handler: async (args, ctx) => {
-      const { goal, error } = parsePlanArgs(args);
-      if (error) return output(ctx, `Error: ${error}`);
-      const model = emptyModel({ goal, runtime: 'simulate', limit: 0 });
-      const result = await run(ctx, buildSimulationArgs({ workspace: ctx.cwd, goal }), ctx.cwd, model);
-      if (result.error) return output(ctx, `Error: ${result.error}`);
-      output(ctx, summarizeStatus(await readStatus(ctx.cwd)));
-      if (result.code !== 0) output(ctx, `Simulation stopped with code ${result.code}.`);
-    },
-  });
 
-  pi.registerCommand('factory-plan', {
-    description: 'Run idea through plan with real model calls. Requires spend confirmation',
-    handler: async (args, ctx) => {
-      const parsed = await confirmSpend(ctx, args, 10);
-      if (parsed.cancelled) return output(ctx, 'Cancelled.');
-      if (parsed.error) return output(ctx, `Error: ${parsed.error}`);
-      await remember(ctx.cwd, { action: 'plan', goal: parsed.goal, options: parsed.options });
-      const model = emptyModel({ goal: parsed.goal, limit: 10 });
-      const result = await run(ctx,
-        buildCoordinatorArgs({ workspace: ctx.cwd, goal: parsed.goal, options: parsed.options }),
-        ctx.cwd, model);
-      if (result.error) return output(ctx, `Error: ${result.error}`);
-      output(ctx, summarizeStatus(await readStatus(ctx.cwd)));
-      if (result.code !== 0) {
-        const blocked = result.stderr.split('\n').filter((l) => l.startsWith('BLOCKED')).join('\n');
-        output(ctx, blocked || `Plan stopped with code ${result.code}.`);
-      }
-    },
-  });
-
-  pi.registerCommand('factory-build', {
-    description: 'Generate and verify one static prototype from a completed plan. Requires spend confirmation',
-    getArgumentCompletions: (prefix: string) => {
-      const items = ['--yes', '--research-query=', '--reference-url=', '--acceptance-file='];
-      const matches = items.filter((i) => i.startsWith(prefix));
-      return matches.length ? matches.map((value) => ({ value, label: value })) : null;
-    },
-    handler: async (args, ctx) => {
-      const parsed = await confirmSpend(ctx, args, 3);
-      if (parsed.cancelled) return output(ctx, 'Cancelled.');
-      if (parsed.error) return output(ctx, `Error: ${parsed.error}`);
-      await remember(ctx.cwd, { action: 'build', goal: parsed.goal, options: parsed.options });
-      const model = emptyModel({ goal: parsed.goal, limit: 13 });
-      const result = await run(ctx,
-        buildCoordinatorArgs({ workspace: ctx.cwd, goal: parsed.goal, options: parsed.options, build: true }),
-        ctx.cwd, model);
-      if (result.error) return output(ctx, `Error: ${result.error}`);
-      output(ctx, summarizeStatus(await readStatus(ctx.cwd)));
-      if (result.code !== 0) {
-        const blocked = result.stderr.split('\n').filter((l) => l.startsWith('BLOCKED')).join('\n');
-        output(ctx, blocked || `Build stopped with code ${result.code}.`);
-      }
-    },
-  });
-
-  pi.registerCommand('factory-resume', {
-    description: 'Repeat the last plan or build command for this project',
-    handler: async (_args, ctx) => {
-      const last = await recall(ctx.cwd);
-      if (!last || !last.goal) return output(ctx, 'No saved factory command in this project.');
-      if (ctx.hasUI) {
-        const ok = await ctx.ui.confirm('Resume factory run?',
-          `Repeat the last ${last.action} run. Model calls have no dollar limit. Goal: ${last.goal}`);
-        if (!ok) return output(ctx, 'Cancelled.');
-      }
-      const build = last.action === 'build';
-      const model = emptyModel({ goal: last.goal, limit: build ? 13 : 10 });
-      const result = await run(ctx,
-        buildCoordinatorArgs({ workspace: ctx.cwd, goal: last.goal, options: last.options || {}, build }),
-        ctx.cwd, model);
-      if (result.error) return output(ctx, `Error: ${result.error}`);
-      output(ctx, summarizeStatus(await readStatus(ctx.cwd)));
-      if (result.code !== 0) output(ctx, `Resume stopped with code ${result.code}.`);
-    },
-  });
 }

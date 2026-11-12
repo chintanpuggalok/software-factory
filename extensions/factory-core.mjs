@@ -82,6 +82,48 @@ function parseArgs(text, { requireGoal = true, allowSimulate = false } = {}) {
   return { goal: goal.join(' '), options };
 }
 
+export const FACTORY_COMMANDS = ['status', 'plan', 'build', 'simulate', 'resume', 'help'];
+
+export function parseFactoryCommand(text) {
+  const parsed = parseFactoryArgs(text);
+  if (parsed.error) return parsed;
+  const tokens = (parsed.goal || '').trim().split(/\s+/).filter(Boolean);
+  const first = tokens[0] || '';
+  if (FACTORY_COMMANDS.includes(first)) {
+    return { command: first, goal: tokens.slice(1).join(' '), options: parsed.options };
+  }
+  if (parsed.options.simulate) return { command: 'simulate', goal: parsed.goal, options: parsed.options };
+  if (parsed.options.build) return { command: 'build', goal: parsed.goal, options: parsed.options };
+  return { command: 'auto', goal: parsed.goal, options: parsed.options };
+}
+
+export function modelFromStatus(status, goal) {
+  const model = emptyModel({ goal: goal || status?.plan?.goal || '', limit: 10 });
+  const stages = status?.plan?.stages;
+  if (Array.isArray(stages)) {
+    for (const saved of stages) {
+      const row = model.stages.find((stage) => stage.name === saved.name);
+      if (!row) continue;
+      row.state = String(saved.audit || '').startsWith('PASS') ? 'passed' : 'blocked';
+      row.verdict = String(saved.audit || '');
+    }
+  }
+  if (status?.plan?.blocked) {
+    model.blocked = { stage: status.plan.blocked.stage, verdict: status.plan.blocked.audit };
+  }
+  model.verification = verificationFromStatus(status);
+  return model;
+}
+
+export function nextActionHint(action) {
+  return {
+    plan: 'next: /factory plan',
+    'resume-plan': 'next: /factory resume',
+    build: 'next: /factory build',
+    done: 'next: review the prototype or start a new goal',
+  }[action] || 'next: provide a goal';
+}
+
 export function nextAction(status) {
   const plan = status?.plan;
   if (!plan) return 'plan';
@@ -251,9 +293,24 @@ export function renderRunLines(model, width = 64) {
     put(clip(`static ${model.verification.static || 'unknown'} · browser ${model.verification.browser || 'unknown'}`, inner));
   }
   put('');
-  put('/factory-status for detail · ctrl+c stops the run');
+  put(model.next || '/factory status · /factory help · ctrl+c stops the run');
   lines.push('╰' + '─'.repeat(inner) + '╯');
   return lines;
+}
+
+export function renderIdleLines(width = 64) {
+  const inner = Math.max(24, Math.min(96, width)) - 2;
+  const put = (text) => '│ ' + padRight(text, inner - 1) + '│';
+  const title = ' factory ';
+  const side = Math.max(0, inner - title.length);
+  return [
+    '╭' + '─'.repeat(Math.floor(side / 2)) + title + '─'.repeat(side - Math.floor(side / 2)) + '╮',
+    put('No saved run in this project.'),
+    put('/factory <goal>   plan, build, and verify'),
+    put('/factory status   show saved state'),
+    put('/factory help     all commands'),
+    '╰' + '─'.repeat(inner) + '╯',
+  ];
 }
 
 export function verificationFromStatus(status) {

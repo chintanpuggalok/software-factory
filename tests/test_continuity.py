@@ -36,8 +36,13 @@ class ContinuityInstructionTests(unittest.TestCase):
         self.assertIn('required authorization', text)
         self.assertIn('Never bypass safety gates or expand scope', text)
 
+    def test_no_skill_shadows_an_extension_command(self):
+        commands = {'factory', 'factory-status'}
+        for path in SKILLS.glob('*/SKILL.md'):
+            self.assertNotIn(path.parent.name, commands, f'{path.parent.name} shadows /{path.parent.name}')
+
     def test_single_entry_skill_restores_state(self):
-        text = read(SKILLS / 'factory/SKILL.md')
+        text = read(SKILLS / 'factory-entry/SKILL.md')
         self.assertIn('.factory/entry.json', text)
         self.assertIn('restore the saved goal', text)
         self.assertIn('Do not start a new goal when a saved goal exists', text)

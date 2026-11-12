@@ -70,7 +70,7 @@ Try it without model calls first:
 Skills-only alternative, when the extension is not installed:
 
 ```text
-/skill:factory A local checklist app for one person
+/skill:factory-entry A local checklist app for one person
 ```
 
 The package includes its own startup skill. You do not need a global `project-start` skill.
@@ -116,7 +116,7 @@ Use the skills for existing code:
 | Review a trust boundary | `/skill:factory-security` |
 | Prepare a release | `/skill:factory-release` |
 
-The coordinator's `/factory-build` generates a **single static HTML prototype** in `.factory-build/`. It does not modify an existing application or its dependencies. For an existing app, use the skills and your project's own tooling. The coordinator can still plan and record audits.
+The coordinator's `/factory build` generates a **single static HTML prototype** in `.factory-build/`. It does not modify an existing application or its dependencies. For an existing app, use the skills and your project's own tooling. The coordinator can still plan and record audits.
 
 ### Run one stage directly
 
@@ -150,26 +150,26 @@ The package registers a Pi extension. You do not run a CLI. `/factory` is the no
 
 | Command | What it does | Model calls |
 |---|---|---|
-| `/factory [goal]` | Create or restore state, plan, then build and verify | Up to 13 |
-| `/factory-status` | Show the saved run, stage verdicts, and verification state | None |
-| `/factory-simulate <goal>` | Run the deterministic eight-stage simulation | None |
-| `/factory-plan <goal>` | Run idea, spec, design, architecture, and plan with one audit per stage | Up to 10 |
-| `/factory-build <goal>` | Resume the plan, generate one static prototype, and verify it | Plan remainder + up to 3 |
-| `/factory-resume` | Repeat the last plan or build command for this project | Same as the last run |
+| `/factory` | Show status and the next step. Resumes a saved goal | None |
+| `/factory <goal>` | Create or restore state, plan, then build and verify | Up to 13 |
+| `/factory status` | Show the saved run, stage verdicts, and verification state | None |
+| `/factory plan <goal>` | Plan only, with one audit per stage | Up to 10 |
+| `/factory build` | Generate and verify one prototype from a passed plan | Up to 3 |
+| `/factory simulate <goal>` | Run the eight-stage simulation | None |
+| `/factory resume` | Repeat the last plan or build | Same as the last run |
+| `/factory help` | Show this command list | None |
 
 Examples:
 
 ```text
-/factory-simulate A local checklist app for one person
-
-/factory-plan A local checklist app for one person --research-query=task management software
-
-/factory-build A local checklist app for one person --acceptance-file=.factory/acceptance.json
-
-/factory-status
+/factory A local checklist app for one person
+/factory status
+/factory simulate A local checklist app for one person
+/factory plan A local checklist app for one person --research-query=task management software
+/factory build --acceptance-file=.factory/acceptance.json
 ```
 
-`/factory-plan` and `/factory-build` ask for confirmation in the TUI. In print or automation mode they require `--yes`. Confirmation is an attestation about spending. No dollar limit is enforced. Codex and Claude runtimes are not implemented.
+`/factory` with no goal restores the saved goal. `/factory plan` and `/factory build` ask for confirmation in the TUI. In print or automation mode they require `--yes`. Confirmation is an attestation about spending. No dollar limit is enforced. Codex and Claude runtimes are not implemented.
 
 The extension writes only under the target project's `.factory/` and `.factory-build/` directories. It runs the bundled Python coordinator from the package, so it needs `python3`.
 
@@ -287,7 +287,7 @@ The Pi extension and the optional CLI both call the same Python coordinator. `--
 
 To add one, follow `docs/runtime-adapters.md`. Do not copy Pi flags into another harness without verifying its documented behavior.
 
-The OpenCode adapter runs each call in a private server with an isolated configuration directory: no ambient plugins, MCP servers, skills, or instruction files, and project configuration and `AGENTS.md` discovery are disabled. One successful model completion through it is still pending provider quota; see the verified and unverified lists.
+The OpenCode adapter runs each call in a private server with an isolated configuration directory: no ambient plugins, MCP servers, skills, or instruction files, and project configuration and `AGENTS.md` discovery are disabled. OpenCode resolves its project location from `PWD`, which the adapter pins to the workspace. The OpenCode free usage limit is per provider; select any authenticated provider with `FACTORY_OPENCODE_MODEL`.
 
 ## Verified and unverified
 
@@ -297,17 +297,17 @@ The OpenCode adapter runs each call in a private server with an isolated configu
 - Fixed-stage planning over Pi, with one audit per stage.
 - Calculator prototype passing 13 browser acceptance actions.
 - Sandbox network isolation, interrupted-build recovery, and bounded repair.
-- 91 Python tests and 12 extension tests.
+- 92 Python tests and 14 extension tests.
 - The coordinator emits `PROGRESS` lines on stderr. The extension turns them into a live stage widget.
-- The Pi extension ran `/factory-status` and `/factory-simulate` in print mode without a CLI or model call.
+- The Pi extension ran `/factory status` and `/factory simulate` in print mode without a CLI or model call.
 - The OpenCode adapter shape against a live OpenCode CLI: the injected agents resolve, the command parses, the response header goes to stderr, and the confirmation gate refuses before any process starts.
 - A live five-stage plan with the current default model: all stages passed, and each wrote `docs/factory/<stage>.md`.
 - A live static build after that plan: structural checks passed and the isolated browser probe passed. See `artifacts/live-run-review.md`.
-- Two real read-only completions through the OpenCode adapter via `factory.py --mode pi --runtime opencode`: one plain response and one with a permitted file read. Tool activity went to stderr, stdout held only the response, and exit codes were clean.
+- Three real completions through the OpenCode adapter via `factory.py --mode pi --runtime opencode`: one plain response, permitted file reads, and a denied file read under the deny-all planner agent. Tool activity went to stderr, stdout held only the response text, and exit codes were clean. A rerun with a mismatched parent working directory caught a location bug; the adapter now pins `PWD` to the workspace and a test locks it.
 
 **Unverified:**
 
-- Denial enforcement in a live run: whether a model that attempts a tool under the deny-all `factory-planner` agent sees clean refusal output. The account's small free quota ran out before this probe could repeat.
+- Individually provoked denials for shell, web, and subagent actions under the planner agent. They follow the same permission rules as the observed file-read denial.
 
 - Automatic skill or playbook selection for an arbitrary request.
 - A completely unattended idea-to-release run.

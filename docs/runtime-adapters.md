@@ -69,10 +69,12 @@ Do not copy Pi flags into another harness. Verify its documented behavior first.
 Verified against a live OpenCode CLI: the injected agents resolve, the command
 shape parses, stdout contains only the response text, the run header and
 errors go to stderr, and the confirmation gate refuses before any process
-starts. Not yet verified with a successful model completion: the provider
-quota and balance were exhausted during testing. Until one real planning call
-succeeds, treat the OpenCode adapter as implemented but not proven for output
-purity when a model attempts a denied tool.
+starts. Live completions through `factory.py` verified a plain response,
+permitted file reads with tool activity on stderr, and a denied file read
+under the deny-all `factory-planner` agent, which refused in plain text and
+leaked no contents. OpenCode resolves its project location from the `PWD`
+environment variable rather than the process cwd, so the adapter pins `PWD`
+to the workspace; a rerun with a mismatched parent directory confirmed this.
 
 Environment: `FACTORY_OPENCODE_MODEL` optionally pins `--model
 provider/model`. Without it the harness default model is used. Each call

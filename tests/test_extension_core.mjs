@@ -10,10 +10,12 @@ import {
   emptyModel,
   nextAction,
   parseFactoryArgs,
+  parseFactoryCommand,
   parsePlanArgs,
   parseProgress,
   readStatus,
   renderRunLines,
+  renderIdleLines,
   runCoordinator,
   summarizeStatus,
   verificationFromStatus,
@@ -128,4 +130,21 @@ test('parses the single entry command without a goal', () => {
   assert.deepEqual(parseFactoryArgs(''), { goal: '', options: { yes: false, researchQuery: null, referenceUrls: [], acceptanceFile: null, build: false, simulate: false } });
   assert.equal(parseFactoryArgs('--simulate').options.simulate, true);
   assert.match(parsePlanArgs('goal --simulate').error, /Unknown option/);
+});
+
+test('renders an idle help box within the width', () => {
+  const lines = renderIdleLines(50);
+  assert.equal(lines[0].startsWith('╭'), true);
+  assert(lines.some((line) => line.includes('/factory <goal>')));
+  assert(lines.every((line) => Array.from(line).length <= 50));
+});
+
+test('parses factory subcommands', () => {
+  assert.equal(parseFactoryCommand('status').command, 'status');
+  assert.equal(parseFactoryCommand('help').command, 'help');
+  assert.equal(parseFactoryCommand('plan my app').command, 'plan');
+  assert.equal(parseFactoryCommand('plan my app').goal, 'my app');
+  assert.equal(parseFactoryCommand('my app').command, 'auto');
+  assert.equal(parseFactoryCommand('my app --simulate').command, 'simulate');
+  assert.equal(parseFactoryCommand('my app --build').command, 'build');
 });
