@@ -51,7 +51,7 @@ def _recover(folder, goal):
     return path
 
 
-def generate(workspace, goal, *, subscription_confirmed=False, invoke_fn=invoke):
+def generate(workspace, goal, *, subscription_confirmed=False, invoke_fn=invoke, expected_runtime=None):
     workspace = Path(workspace).resolve()
     if not workspace.is_dir() or not isinstance(goal, str) or not goal.strip():
         raise ValueError("An existing workspace and non-empty goal are required")
@@ -64,6 +64,8 @@ def generate(workspace, goal, *, subscription_confirmed=False, invoke_fn=invoke)
         raise ValueError('Invalid planning stage')
     if state.get('goal') != goal or [x.get('name') for x in state['stages']] != expected:
         raise ValueError('A matching completed planning run is required')
+    if expected_runtime is not None and state.get('runtime', expected_runtime) != expected_runtime:
+        raise ValueError('Saved planning run uses a different runtime')
     if any(not str(x.get('audit', '')).startswith('PASS') or not x.get('output') for x in state['stages']):
         raise ValueError('Planning evidence is incomplete')
     if not subscription_confirmed:

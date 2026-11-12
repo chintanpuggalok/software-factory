@@ -12,7 +12,7 @@ Inspired by [Poteto's pstack](https://github.com/cursor/plugins/tree/main/pstack
 - **One coordinator:** Python, project-local state, resumable stages.
 - **One audit contract:** `PASS: evidence`, `REVISE: findings`, `BLOCKED: reason`. Work advances only on PASS.
 - **Optional browser checks:** isolated Chromium with an acceptance contract.
-- **Runtime adapters:** Pi today. Codex and Claude fail closed until implemented.
+- **Runtime adapters:** Pi and OpenCode today. Codex and Claude fail closed until implemented.
 
 ## Mental map
 
@@ -283,9 +283,11 @@ python3 factory.py /path/to/project --mode pi-plan --subscription-confirmed --go
 
 ## Runtime adapters
 
-The Pi extension and the optional CLI both call the same Python coordinator. `--runtime` selects the execution adapter. Only `pi` is implemented and tested. `codex` and `claude` fail closed before any process starts.
+The Pi extension and the optional CLI both call the same Python coordinator. `--runtime` selects the execution adapter. `pi` and `opencode` are implemented; `opencode` needs the OpenCode CLI and its own authenticated provider. `codex` and `claude` fail closed before any process starts.
 
 To add one, follow `docs/runtime-adapters.md`. Do not copy Pi flags into another harness without verifying its documented behavior.
+
+The OpenCode adapter runs each call in a private server with an isolated configuration directory: no ambient plugins, MCP servers, skills, or instruction files, and project configuration and `AGENTS.md` discovery are disabled. One successful model completion through it is still pending provider quota; see the verified and unverified lists.
 
 ## Verified and unverified
 
@@ -295,11 +297,14 @@ To add one, follow `docs/runtime-adapters.md`. Do not copy Pi flags into another
 - Fixed-stage planning over Pi, with one audit per stage.
 - Calculator prototype passing 13 browser acceptance actions.
 - Sandbox network isolation, interrupted-build recovery, and bounded repair.
-- 66 Python tests and 12 extension tests.
+- 82 Python tests and 12 extension tests.
 - The coordinator emits `PROGRESS` lines on stderr. The extension turns them into a live stage widget.
 - The Pi extension ran `/factory-status` and `/factory-simulate` in print mode without a CLI or model call.
+- The OpenCode adapter shape against a live OpenCode CLI: the injected agents resolve, the command parses, the response header goes to stderr, and the confirmation gate refuses before any process starts.
 
 **Unverified:**
+
+- A successful planning completion through the OpenCode adapter. Provider quota and balance ran out during testing, so output purity when a model attempts a denied tool is also unobserved.
 
 - Automatic skill or playbook selection for an arbitrary request.
 - A completely unattended idea-to-release run.

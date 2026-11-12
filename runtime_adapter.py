@@ -1,14 +1,15 @@
 """Selectable execution runtimes for the factory coordinator.
 
-Only the Pi adapter is implemented and tested. Codex and Claude are declared
+The Pi and OpenCode adapters are implemented. Codex and Claude are declared
 placeholders so the interface is stable when those adapters are added.
 """
 import os
 import shutil
 
+import opencode_adapter
 import pi_adapter
 
-IMPLEMENTED = ("pi",)
+IMPLEMENTED = ("pi", "opencode")
 DECLARED = ("codex", "claude")
 
 
@@ -28,6 +29,20 @@ class PiRuntime:
 
     def run_read_only(self, workspace, prompt, *, confirmed=False, timeout=120):
         return pi_adapter.run_read_only(workspace, prompt, subscription_confirmed=confirmed, timeout=timeout)
+
+
+class OpenCodeRuntime:
+    name = "opencode"
+    binary = "opencode"
+
+    def available(self):
+        return shutil.which(self.binary) is not None
+
+    def run_text(self, workspace, prompt, *, confirmed=False, timeout=120):
+        return opencode_adapter.run_text(workspace, prompt, subscription_confirmed=confirmed, timeout=timeout)
+
+    def run_read_only(self, workspace, prompt, *, confirmed=False, timeout=120):
+        return opencode_adapter.run_read_only(workspace, prompt, subscription_confirmed=confirmed, timeout=timeout)
 
 
 class PlannedRuntime:
@@ -55,6 +70,8 @@ def get_runtime(name=None):
     selected = (name or os.environ.get("FACTORY_RUNTIME") or "pi").strip().lower()
     if selected == "pi":
         return PiRuntime()
+    if selected == "opencode":
+        return OpenCodeRuntime()
     if selected in DECLARED:
         return PlannedRuntime(selected)
     raise RuntimeUnavailable(f"Unknown runtime: {selected}. Use one of: {', '.join(IMPLEMENTED + DECLARED)}")

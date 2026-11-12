@@ -17,6 +17,29 @@ class StaticTests(unittest.TestCase):
                   ('idea', 'spec', 'design', 'architecture', 'plan')]
         (path / 'pi-plan.json').write_text(json.dumps({'goal': 'goal', 'stages': stages}))
 
+    def test_saved_runtime_mismatch_blocks_build(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / '.factory'
+            path.mkdir()
+            stages = [{'name': n, 'output': 'draft', 'audit': 'PASS'} for n in
+                      ('idea', 'spec', 'design', 'architecture', 'plan')]
+            (path / 'pi-plan.json').write_text(json.dumps(
+                {'goal': 'goal', 'runtime': 'pi', 'stages': stages}))
+            called = []
+            with self.assertRaisesRegex(ValueError, 'different runtime'):
+                pi_static.generate(folder, 'goal', subscription_confirmed=True,
+                                   invoke_fn=lambda *args: called.append(True),
+                                   expected_runtime='opencode')
+            self.assertEqual(called, [])
+
+    def test_saved_runtime_missing_stays_compatible(self):
+        with tempfile.TemporaryDirectory() as folder:
+            self.setup_plan(folder)
+            document = '<html><head><title>ok</title></head><body>ok</body></html>'
+            path = pi_static.generate(folder, 'goal', subscription_confirmed=True,
+                                      invoke_fn=lambda *args: document, expected_runtime='opencode')
+            self.assertEqual(path.read_text(), document)
+
     def test_writes_one_document_and_never_overwrites(self):
         with tempfile.TemporaryDirectory() as folder:
             self.setup_plan(folder)

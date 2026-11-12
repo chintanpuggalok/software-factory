@@ -10,6 +10,7 @@ import tempfile
 from pathlib import Path
 
 import pi_adapter
+import runtime_adapter
 
 STAGES = ("idea", "spec", "design", "architecture", "plan", "build", "verify", "release")
 VERSION = 1
@@ -104,8 +105,8 @@ def main():
     parser.add_argument("workspace", help="Existing project directory")
     parser.add_argument("--goal", required=True, help="Goal for this run")
     parser.add_argument("--mode", choices=("simulate", "pi", "pi-plan"), default="simulate")
-    parser.add_argument("--runtime", choices=("pi", "codex", "claude"), default="pi",
-                        help="Execution adapter. Only pi is implemented.")
+    parser.add_argument("--runtime", choices=("pi", "opencode", "codex", "claude"), default="pi",
+                        help="Execution adapter. Only pi and opencode are implemented.")
     parser.add_argument("--fail-stage", choices=STAGES, help="Simulate an audit failure")
     parser.add_argument("--build-static", action="store_true", help="After a passed Pi plan, generate one static HTML prototype")
     parser.add_argument("--progress", action="store_true", help="Write PROGRESS JSON lines to stderr")
@@ -125,17 +126,19 @@ def main():
         parser.error('--acceptance-file requires --mode pi-plan')
     if args.mode == "pi-plan":
         import pi_workflow
-        import runtime_adapter
         try:
             runtime = runtime_adapter.get_runtime(args.runtime)
-            if not isinstance(runtime, runtime_adapter.PiRuntime):
+            if runtime.name not in runtime_adapter.IMPLEMENTED:
                 raise runtime_adapter.RuntimeUnavailable(
-                    f"{args.runtime} adapter is not implemented; use --runtime pi")
+                    f"{args.runtime} adapter is not implemented; use one of: "
+                    + ", ".join(runtime_adapter.IMPLEMENTED))
             if not runtime.available():
-                raise runtime_adapter.RuntimeUnavailable("The pi executable is not available")
+                raise runtime_adapter.RuntimeUnavailable(f"The {runtime.name} executable is not available")
         except runtime_adapter.RuntimeUnavailable as exc:
             print(f"BLOCKED: {exc}", file=sys.stderr)
             return 2
+        invoke_fn = lambda workspace, prompt, confirmed: pi_workflow.invoke_with(
+            runtime, workspace, prompt, confirmed)
         acceptance = None
         if args.acceptance_file:
             if not args.build_static:
@@ -168,12 +171,14 @@ def main():
             import pi_static
             try:
                 original = pi_static.generate(args.workspace, args.goal,
-                                              subscription_confirmed=args.subscription_confirmed)
+                                              subscription_confirmed=args.subscription_confirmed,
+                                              invoke_fn=invoke_fn, expected_runtime=runtime.name)
                 import browser_pipeline
                 import browser_verify
                 browser_result = browser_pipeline.verify_and_repair(
                     args.workspace, args.goal, original, subscription_confirmed=args.subscription_confirmed,
-                    probe_fn=lambda path: browser_verify.probe(path, acceptance=acceptance))
+                    probe_fn=lambda path: browser_verify.probe(path, acceptance=acceptance),
+                    invoke_fn=invoke_fn)
                 state['prototype_path'] = browser_result['artifact']
                 state['browser_verification'] = browser_result
                 evidence_path = original.parent / 'browser-evidence.json'
@@ -197,11 +202,19 @@ def main():
         return 0
     if args.mode == "pi":
         try:
+            runtime = runtime_adapter.get_runtime(args.runtime)
+            if runtime.name not in runtime_adapter.IMPLEMENTED:
+                raise runtime_adapter.RuntimeUnavailable(
+                    f"{args.runtime} adapter is not implemented; use one of: "
+                    + ", ".join(runtime_adapter.IMPLEMENTED))
+            if not runtime.available():
+                raise runtime_adapter.RuntimeUnavailable(f"The {runtime.name} executable is not available")
             if args.subscription_confirmed:
                 print("WARNING: subscription attested by user; no dollar limit is enforced.", file=sys.stderr)
-            result = pi_adapter.run_read_only(args.workspace, args.goal,
-                                              subscription_confirmed=args.subscription_confirmed)
-        except (OSError, ValueError, subprocess.TimeoutExpired, pi_adapter.PrepaidUnavailable) as exc:
+            result = runtime.run_read_only(args.workspace, args.goal,
+                                           confirmed=args.subscription_confirmed)
+        except (OSError, ValueError, subprocess.TimeoutExpired, pi_adapter.PrepaidUnavailable,
+                runtime_adapter.RuntimeUnavailable) as exc:
             print(f"BLOCKED: {exc}", file=sys.stderr)
             return 2
         print(result.stdout, end="")

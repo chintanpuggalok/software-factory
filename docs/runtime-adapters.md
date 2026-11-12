@@ -32,7 +32,7 @@ Requirements for each method:
 3. Keep unimplemented names in `DECLARED`. They must fail closed with a clear
    message before any subprocess starts.
 4. Record the adapter name in saved state. Refuse to resume a run under a
-   different adapter.
+   different adapter. The static build re-checks the saved runtime name.
 5. Test: missing workspace, empty prompt, no confirmation, nonzero exit, empty
    output, timeout, and the exact command shape with a fake process.
 6. Test one real read-only call only after the user authorizes spending. State
@@ -43,10 +43,42 @@ Requirements for each method:
 | Harness | Non-interactive text | Tool restriction |
 |---|---|---|
 | Pi | `pi --print ... --no-tools --no-skills --no-context-files -- <prompt>` | Flags exist and are tested. |
+| OpenCode | `opencode run --standalone --agent <factory agent> [--model <m>] --archived --title factory -- <prompt>` | Injected agent permissions deny every action; the read-only agent allows only file reads. |
 | Codex | Not implemented | Design an equivalent restricted invocation. Do not assume flags. |
 | Claude | Not implemented | Design an equivalent restricted invocation. Do not assume flags. |
 
 Do not copy Pi flags into another harness. Verify its documented behavior first.
+
+## OpenCode adapter notes
+
+`opencode_adapter.py` verifies this shape against OpenCode V2. Per call it:
+
+1. Creates one temporary configuration directory and writes `opencode.json`
+   with two agents. `factory-planner` denies every permission action, so no
+   tool, skill, subagent, question, or web request can run. `factory-readonly`
+   allows only file reads and keeps deny rules for `.env` files. Both agents
+   get a minimal system prompt that replaces the provider base prompt.
+2. Sets `XDG_CONFIG_HOME` to that directory. The user's global plugins, MCP
+   servers, skills, agents, and instruction files do not apply. Provider
+   authentication lives outside the config directory and keeps working.
+3. Sets `OPENCODE_DISABLE_PROJECT_CONFIG=1`, which skips the project
+   `opencode.json` and project `AGENTS.md` discovery.
+4. Runs `opencode run --standalone ...` with a private server, so the shared
+   background service does not load the ambient configuration.
+
+Verified against a live OpenCode CLI: the injected agents resolve, the command
+shape parses, stdout contains only the response text, the run header and
+errors go to stderr, and the confirmation gate refuses before any process
+starts. Not yet verified with a successful model completion: the provider
+quota and balance were exhausted during testing. Until one real planning call
+succeeds, treat the OpenCode adapter as implemented but not proven for output
+purity when a model attempts a denied tool.
+
+Environment: `FACTORY_OPENCODE_MODEL` optionally pins `--model
+provider/model`. Without it the harness default model is used. Each call
+saves an archived session named `factory` in the user's OpenCode database;
+OpenCode has no no-session mode. The adapter kills the process group on
+timeout, because the private server is a child process.
 
 ## Parity checklist for a new adapter
 

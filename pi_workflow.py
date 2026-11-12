@@ -25,9 +25,14 @@ def _checked(runtime, workspace, prompt, subscription_confirmed):
     return result.stdout.strip()
 
 
+def invoke_with(runtime, workspace, prompt, subscription_confirmed):
+    """Single call through an explicit runtime adapter."""
+    return _checked(runtime, workspace, prompt, subscription_confirmed)
+
+
 def invoke(workspace, prompt, subscription_confirmed):
     """Default single call through the selected runtime."""
-    return _checked(runtime_adapter.get_runtime(), workspace, prompt, subscription_confirmed)
+    return invoke_with(runtime_adapter.get_runtime(), workspace, prompt, subscription_confirmed)
 
 
 def _load_state(path, goal, runtime_name):

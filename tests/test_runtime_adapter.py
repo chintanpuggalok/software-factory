@@ -11,8 +11,9 @@ class RuntimeSelectionTests(unittest.TestCase):
         self.assertEqual(runtime_adapter.get_runtime().name, 'pi')
 
     def test_environment_can_select_runtime(self):
-        with patch.dict('os.environ', {'FACTORY_RUNTIME': 'codex'}):
-            self.assertEqual(runtime_adapter.get_runtime().name, 'codex')
+        for name in ('codex', 'opencode'):
+            with patch.dict('os.environ', {'FACTORY_RUNTIME': name}):
+                self.assertEqual(runtime_adapter.get_runtime().name, name)
 
     def test_unknown_runtime_fails_closed(self):
         with self.assertRaises(runtime_adapter.RuntimeUnavailable):
@@ -33,6 +34,26 @@ class RuntimeSelectionTests(unittest.TestCase):
             result = runtime.run_text('/tmp', 'prompt', confirmed=True, timeout=5)
             self.assertEqual(result.stdout, 'ok')
             call.assert_called_once_with('/tmp', 'prompt', subscription_confirmed=True, timeout=5)
+
+    def test_opencode_delegates_to_opencode_adapter(self):
+        runtime = runtime_adapter.get_runtime('opencode')
+        self.assertEqual(runtime.name, 'opencode')
+        with patch('opencode_adapter.run_text', return_value=subprocess.CompletedProcess([], 0, 'ok', '')) as text, \
+                patch('opencode_adapter.run_read_only',
+                      return_value=subprocess.CompletedProcess([], 0, 'read', '')) as read_only:
+            result = runtime.run_text('/tmp', 'prompt', confirmed=True, timeout=5)
+            self.assertEqual(result.stdout, 'ok')
+            text.assert_called_once_with('/tmp', 'prompt', subscription_confirmed=True, timeout=5)
+            result = runtime.run_read_only('/tmp', 'prompt', confirmed=False, timeout=6)
+            self.assertEqual(result.stdout, 'read')
+            read_only.assert_called_once_with('/tmp', 'prompt', subscription_confirmed=False, timeout=6)
+
+    def test_opencode_availability_follows_the_executable(self):
+        runtime = runtime_adapter.get_runtime('opencode')
+        with patch('runtime_adapter.shutil.which', return_value=None):
+            self.assertFalse(runtime.available())
+        with patch('runtime_adapter.shutil.which', return_value='/fake/opencode'):
+            self.assertTrue(runtime.available())
 
 
 if __name__ == '__main__':
