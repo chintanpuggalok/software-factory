@@ -11,4 +11,4 @@ description: Plan a bounded product implementation. Use after scope is defined o
 4. Mark decisions that need approval. Propose cheap delegation only for bounded work with a clear budget and permissions.
 5. Record the plan and next action. Obtain approval for material architecture, dependencies, cost, or workflow changes.
 
-Do not implement while planning. At the stage change, hand `factory-build` the goal, confirmed decisions, artifact paths, open questions, and next action.
+Complete the plan before implementation. At the stage change, hand `factory-build` the goal, confirmed decisions, artifact paths, open questions, and next action. Continue into authorized implementation without waiting for a new prompt.
