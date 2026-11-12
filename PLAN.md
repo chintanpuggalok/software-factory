@@ -30,11 +30,12 @@ Build a Pi-based coordinator with durable project-local state. Test an end-to-en
 - Audited each skill for need and usage. Removed three overlapping skills: `factory-autonomous`, `factory-preferences`, and `factory-eval`. Their unique content moved to `factory-route`, `factory-taste`, and `factory-learn`.
 - Added `factory-project-start` so the package does not depend on a global startup skill. An isolated Pi install now discovers 27 skills with no diagnostics. See `artifacts/skill-necessity-audit.md`.
 - Added a Pi extension so the factory runs from `/factory-*` commands without a CLI. Twelve Node tests pass. The extension draws a live stage widget above the prompt. `/factory` takes subcommands (status, plan, build, simulate, resume, help); the entry skill was renamed to `factory-entry` because skills shadow extension commands. The extension ran `/factory-status` and `/factory-simulate` in Pi print mode. A plan without `--yes` refused before any model call.
+- The extension now passes `--runtime` through on plan and build runs, validates it against the implemented set, and shows the selection in the widget. The fix also restored plan mode: `/factory plan` had been running the deterministic simulator while promising model calls. 17 extension tests and 92 Python tests pass. See `artifacts/extension-runtime-passthrough.md`.
 - Live five-stage planning and a static build passed with the current default model. Fixes: strict verdict parsing, one `REVISE` regeneration, durable `docs/factory/<stage>.md` artifacts, newest-first history budget, and longer output and timeout limits. 92 Python and 14 extension tests pass. See `artifacts/live-run-review.md`.
 - The first review is in `artifacts/skill-review.md`. It predates the stage-specific audits.
 
 ## Next action
-Decide whether the Pi extension should pass `--runtime` through to the coordinator. Then define a deployment target and release contract.
+Define a deployment target and release contract, then decide the metering design for autonomous runs.
 
 ## Blockers
 The OpenCode free usage limit is per provider and both free pools ran dry at times; the adapter is proven for real calls on `opencode-go/longcat-2.5-free`. Full product correctness, checklist acceptance, and screen-reader behavior remain unverified. Static snippets do not verify market-share rankings. No dollar cap is enforced; the user accepts overages. Recovery for external effects and a real deployment target remain open. Cross-project preference loading is untested. Access to the applicable ASD-STE100 standard and compliance verification are needed.

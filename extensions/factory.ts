@@ -112,7 +112,7 @@ export default function (pi: ExtensionAPI) {
     description: 'Factory entry: status, plan, build, simulate, resume, help',
     getArgumentCompletions: (prefix: string) => {
       const items = ['status', 'plan', 'build', 'simulate', 'resume', 'help',
-        '--yes', '--simulate', '--research-query=', '--reference-url=', '--acceptance-file='];
+        '--yes', '--simulate', '--research-query=', '--reference-url=', '--acceptance-file=', '--runtime='];
       const matches = items.filter((i) => i.startsWith(prefix));
       return matches.length ? matches.map((value) => ({ value, label: value })) : null;
     },
@@ -129,7 +129,7 @@ export default function (pi: ExtensionAPI) {
           '/factory build            build and verify from a passed plan',
           '/factory simulate <goal>  free eight-stage simulation',
           '/factory resume           repeat the last plan or build',
-          'options: --yes --research-query= --reference-url= --acceptance-file=',
+          'options: --yes --research-query= --reference-url= --acceptance-file= --runtime=pi|opencode',
         ].join('\n'));
       }
       if (parsed.command === 'status') return void await showStatus(ctx, parsed.goal);
@@ -151,9 +151,9 @@ export default function (pi: ExtensionAPI) {
         const confirmed = await confirmGoal(ctx, goal, 3, parsed.options.yes);
         if (confirmed.cancelled) return output(ctx, 'Cancelled.');
         if (confirmed.error) return output(ctx, `Error: ${confirmed.error}`);
-        const model = emptyModel({ goal, limit: 3 });
+        const model = emptyModel({ goal, limit: 3, runtime: parsed.options.runtime || 'pi' });
         const result = await run(ctx,
-          buildCoordinatorArgs({ workspace: ctx.cwd, goal, options: parsed.options, build: true }), ctx.cwd, model);
+          buildCoordinatorArgs({ workspace: ctx.cwd, goal, options: parsed.options, mode: 'build' }), ctx.cwd, model);
         model.next = nextActionHint('done');
         paint(ctx, model);
         if (result.code !== 0) {
@@ -185,10 +185,10 @@ export default function (pi: ExtensionAPI) {
       if (confirmed.cancelled) return output(ctx, 'Cancelled.');
       if (confirmed.error) return output(ctx, `Error: ${confirmed.error}`);
 
-      let model = emptyModel({ goal, limit: calls });
+      let model = emptyModel({ goal, limit: calls, runtime: parsed.options.runtime || 'pi' });
       if (action === 'plan' || action === 'resume-plan') {
         const plan = await run(ctx,
-          buildCoordinatorArgs({ workspace: ctx.cwd, goal, options: parsed.options }), ctx.cwd, model);
+          buildCoordinatorArgs({ workspace: ctx.cwd, goal, options: parsed.options, mode: 'plan' }), ctx.cwd, model);
         if (plan.code !== 0) {
           paint(ctx, model);
           const blocked = plan.stderr.split('\n').filter((l: string) => l.startsWith('BLOCKED')).join('\n');
@@ -197,9 +197,9 @@ export default function (pi: ExtensionAPI) {
       }
       const afterPlan = await readStatus(ctx.cwd);
       if (nextAction(afterPlan) === 'build') {
-        model = emptyModel({ goal, limit: 3 });
+        model = emptyModel({ goal, limit: 3, runtime: parsed.options.runtime || 'pi' });
         const build = await run(ctx,
-          buildCoordinatorArgs({ workspace: ctx.cwd, goal, options: parsed.options, build: true }), ctx.cwd, model);
+          buildCoordinatorArgs({ workspace: ctx.cwd, goal, options: parsed.options, mode: 'build' }), ctx.cwd, model);
         if (build.code !== 0) {
           paint(ctx, model);
           const blocked = build.stderr.split('\n').filter((l: string) => l.startsWith('BLOCKED')).join('\n');

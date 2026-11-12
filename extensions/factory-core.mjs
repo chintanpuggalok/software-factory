@@ -37,7 +37,11 @@ const VALUE_FLAGS = {
   '--research-query': 'researchQuery',
   '--reference-url': 'referenceUrl',
   '--acceptance-file': 'acceptanceFile',
+  '--runtime': 'runtime',
 };
+
+// Mirrors the implemented set in factory.py; codex and claude fail closed there.
+const RUNTIMES = ['pi', 'opencode'];
 
 export function parsePlanArgs(text) {
   return parseArgs(text, { requireGoal: true });
@@ -50,7 +54,7 @@ export function parseFactoryArgs(text) {
 function parseArgs(text, { requireGoal = true, allowSimulate = false } = {}) {
   const { tokens, error } = tokenize(text || '');
   if (error) return { error };
-  const options = { yes: false, researchQuery: null, referenceUrls: [], acceptanceFile: null, build: false, simulate: false };
+  const options = { yes: false, researchQuery: null, referenceUrls: [], acceptanceFile: null, build: false, simulate: false, runtime: null };
   const goal = [];
   for (let i = 0; i < tokens.length; i++) {
     const token = tokens[i];
@@ -74,7 +78,12 @@ function parseArgs(text, { requireGoal = true, allowSimulate = false } = {}) {
       if (value === undefined || value.startsWith('--')) return { error: `${name} needs a value` };
     }
     if (name === '--reference-url') options.referenceUrls.push(value);
-    else options[VALUE_FLAGS[name]] = value;
+    else {
+      if (name === '--runtime' && !RUNTIMES.includes(value)) {
+        return { error: `Unknown runtime ${value}. Use one of: ${RUNTIMES.join(', ')}` };
+      }
+      options[VALUE_FLAGS[name]] = value;
+    }
   }
   if (!goal.length && requireGoal) return { error: 'A goal is required' };
   if (options.referenceUrls.length > 3) return { error: 'At most three reference URLs' };
@@ -143,15 +152,16 @@ export async function writeEntry(workspace, entry) {
   await writeFile(path.join(workspace, '.factory', 'entry.json'), JSON.stringify(entry, null, 2) + '\n');
 }
 
-export function buildCoordinatorArgs({ workspace, goal, options = {}, build = false }) {
+export function buildCoordinatorArgs({ workspace, goal, options = {}, mode = 'plan' }) {
   if (!workspace || !goal) throw new Error('workspace and goal are required');
   const args = [workspace, '--goal', goal, '--progress'];
-  if (build) {
-    args.push('--mode', 'pi-plan', '--subscription-confirmed', '--build-static');
-    if (options.researchQuery) args.push('--research-query', options.researchQuery);
-    for (const url of options.referenceUrls || []) args.push('--reference-url', url);
-    if (options.acceptanceFile) args.push('--acceptance-file', options.acceptanceFile);
-  }
+  if (mode === 'simulate') return args;
+  args.push('--mode', 'pi-plan', '--subscription-confirmed');
+  if (mode === 'build') args.push('--build-static');
+  if (options.runtime) args.push('--runtime', options.runtime);
+  if (options.researchQuery) args.push('--research-query', options.researchQuery);
+  for (const url of options.referenceUrls || []) args.push('--reference-url', url);
+  if (mode === 'build' && options.acceptanceFile) args.push('--acceptance-file', options.acceptanceFile);
   return args;
 }
 

@@ -166,10 +166,11 @@ Examples:
 /factory status
 /factory simulate A local checklist app for one person
 /factory plan A local checklist app for one person --research-query=task management software
+/factory plan A local checklist app for one person --runtime=opencode
 /factory build --acceptance-file=.factory/acceptance.json
 ```
 
-`/factory` with no goal restores the saved goal. `/factory plan` and `/factory build` ask for confirmation in the TUI. In print or automation mode they require `--yes`. Confirmation is an attestation about spending. No dollar limit is enforced. Codex and Claude runtimes are not implemented.
+`/factory` with no goal restores the saved goal. `/factory plan` and `/factory build` ask for confirmation in the TUI. In print or automation mode they require `--yes`. `--runtime=pi|opencode` selects the execution adapter for planning and build calls; unknown values are rejected before any call. Confirmation is an attestation about spending. No dollar limit is enforced. Codex and Claude runtimes are not implemented.
 
 The extension writes only under the target project's `.factory/` and `.factory-build/` directories. It runs the bundled Python coordinator from the package, so it needs `python3`.
 

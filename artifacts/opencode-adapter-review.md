@@ -25,7 +25,7 @@ The author implemented and reviewed the OpenCode runtime adapter for the factory
 - The OpenCode free usage limit is per provider. `opencode/*` free models and `opencode-go/*` free models had separate budgets; both ran out at times during testing. A caller can select any authenticated provider with `FACTORY_OPENCODE_MODEL`.
 - Each call saves an archived session named `factory` in the user's OpenCode database. OpenCode has no no-session mode.
 - Permissions restrict tool execution, not provider traffic. The model provider itself uses the network by design.
-- The Pi extension does not pass `--runtime`; extension users select the adapter through `FACTORY_RUNTIME`.
+- The extension passes `--runtime` through on plan and build runs; `FACTORY_RUNTIME` remains the selection path for direct CLI use.
 - Denial enforcement is observed for file reads only. Shell, web, and subagent denials follow the same permission rules but were not individually provoked.
 
 ## Next action

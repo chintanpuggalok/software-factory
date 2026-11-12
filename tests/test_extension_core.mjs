@@ -24,7 +24,7 @@ import {
 test('tokenizes quoted goals', () => {
   assert.deepEqual(parsePlanArgs('"a checklist app" --yes'), {
     goal: 'a checklist app',
-    options: { yes: true, researchQuery: null, referenceUrls: [], acceptanceFile: null, build: false, simulate: false },
+    options: { yes: true, researchQuery: null, referenceUrls: [], acceptanceFile: null, build: false, simulate: false, runtime: null },
   });
 });
 
@@ -32,6 +32,13 @@ test('parses value options and repeats reference URLs', () => {
   const result = parsePlanArgs('goal --research-query=market --reference-url=https://www.calculator.net/ --reference-url https://www.desmos.com/scientific');
   assert.equal(result.options.researchQuery, 'market');
   assert.equal(result.options.referenceUrls.length, 2);
+});
+
+test('parses the runtime option in both forms and rejects unknown values', () => {
+  assert.equal(parsePlanArgs('goal --runtime=opencode').options.runtime, 'opencode');
+  assert.equal(parsePlanArgs('goal --runtime pi').options.runtime, 'pi');
+  assert.match(parsePlanArgs('goal --runtime=gpt').error, /Unknown runtime/);
+  assert.match(parsePlanArgs('goal --runtime').error, /needs a value/);
 });
 
 test('rejects unknown options and missing values', () => {
@@ -46,10 +53,17 @@ test('rejects unknown options and missing values', () => {
 test('builds exact coordinator arguments', () => {
   assert.deepEqual(buildSimulationArgs({ workspace: '/p', goal: 'demo' }), ['/p', '--goal', 'demo', '--progress']);
   assert.deepEqual(buildCoordinatorArgs({
-    workspace: '/p', goal: 'demo', build: true,
-    options: { researchQuery: 'q', referenceUrls: ['https://a'], acceptanceFile: '/a.json' },
+    workspace: '/p', goal: 'demo', mode: 'plan',
+    options: { runtime: 'opencode', researchQuery: 'q', referenceUrls: ['https://a'] },
+  }), ['/p', '--goal', 'demo', '--progress', '--mode', 'pi-plan', '--subscription-confirmed',
+    '--runtime', 'opencode', '--research-query', 'q', '--reference-url', 'https://a']);
+  assert.deepEqual(buildCoordinatorArgs({
+    workspace: '/p', goal: 'demo', mode: 'build',
+    options: { runtime: 'opencode', researchQuery: 'q', referenceUrls: ['https://a'], acceptanceFile: '/a.json' },
   }), ['/p', '--goal', 'demo', '--progress', '--mode', 'pi-plan', '--subscription-confirmed', '--build-static',
-    '--research-query', 'q', '--reference-url', 'https://a', '--acceptance-file', '/a.json']);
+    '--runtime', 'opencode', '--research-query', 'q', '--reference-url', 'https://a', '--acceptance-file', '/a.json']);
+  assert.deepEqual(buildCoordinatorArgs({ workspace: '/p', goal: 'demo', mode: 'plan', options: {} }),
+    ['/p', '--goal', 'demo', '--progress', '--mode', 'pi-plan', '--subscription-confirmed']);
 });
 
 test('summarizes an empty project and a blocked plan', () => {
@@ -73,6 +87,17 @@ test('reads saved state and runs the simulator without model calls', async () =>
   assert.match(summarizeStatus(status), /Simulation: demo/);
   const raw = JSON.parse(await readFile(path.join(workspace, '.factory', 'state.json'), 'utf8'));
   assert.equal(raw.stages.length, 8);
+});
+
+test('passes the runtime option to the coordinator and fails closed', async () => {
+  const workspace = await mkdtemp(path.join(tmpdir(), 'factory-core-runtime-'));
+  const result = await runCoordinator({
+    script: path.resolve('factory.py'),
+    workspace,
+    args: buildCoordinatorArgs({ workspace, goal: 'demo', mode: 'plan', options: { runtime: 'codex' } }),
+  });
+  assert.equal(result.code, 2);
+  assert.match(result.stderr, /BLOCKED: codex adapter is not implemented/);
 });
 
 test('reports a coordinator failure instead of throwing', async () => {
@@ -127,7 +152,7 @@ test('resolves the next action from saved state', () => {
 });
 
 test('parses the single entry command without a goal', () => {
-  assert.deepEqual(parseFactoryArgs(''), { goal: '', options: { yes: false, researchQuery: null, referenceUrls: [], acceptanceFile: null, build: false, simulate: false } });
+  assert.deepEqual(parseFactoryArgs(''), { goal: '', options: { yes: false, researchQuery: null, referenceUrls: [], acceptanceFile: null, build: false, simulate: false, runtime: null } });
   assert.equal(parseFactoryArgs('--simulate').options.simulate, true);
   assert.match(parsePlanArgs('goal --simulate').error, /Unknown option/);
 });
@@ -147,4 +172,11 @@ test('parses factory subcommands', () => {
   assert.equal(parseFactoryCommand('my app').command, 'auto');
   assert.equal(parseFactoryCommand('my app --simulate').command, 'simulate');
   assert.equal(parseFactoryCommand('my app --build').command, 'build');
+});
+
+test('keeps the runtime option with the parsed subcommand', () => {
+  const parsed = parseFactoryCommand('plan my app --runtime=opencode');
+  assert.equal(parsed.command, 'plan');
+  assert.equal(parsed.goal, 'my app');
+  assert.equal(parsed.options.runtime, 'opencode');
 });
