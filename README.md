@@ -1,10 +1,18 @@
 # Software Factory
 
-A draft software factory for turning product ideas into verified releases. It aims for engineering rigor: evidence-based decisions, small changes, meaningful tests, and minimal unnecessary output. Its goal is autonomous execution within authorized boundaries.
+A prototype software factory that takes a product idea through planning, a static prototype, and browser checks. It aims for engineering rigor and autonomous execution within authorized limits.
 
-Inspired by [Poteto's pstack](https://github.com/cursor/plugins/tree/main/pstack), particularly its engineering principles and task-specific playbooks. This project adapts those ideas to a product-to-release workflow with design taste and scale planning.
+Inspired by [Poteto's pstack](https://github.com/cursor/plugins/tree/main/pstack).
 
-**Status: prototype.** An experimental Pi workflow runs planning stages with model tools disabled. It can generate a single static HTML prototype, run limited structural and isolated browser checks, and request bounded repairs. A calculator prototype passed selected Chromium checks. The coordinator does not deploy automatically. Market-share claims remain unverified.
+**Status: prototype.** Planning, prototype generation, and selected browser checks work. Automatic task routing, unattended release, and deployment are not implemented. Market-share claims from research are not verified.
+
+## What you get
+
+- **25 agent skills:** 14 workflow skills plus 10 stage audits and the ASD-STE100 writing skill.
+- **One coordinator:** Python, project-local state, resumable stages.
+- **One audit contract:** `PASS: evidence`, `REVISE: findings`, `BLOCKED: reason`. Work advances only on PASS.
+- **Optional browser checks:** isolated Chromium with an acceptance contract.
+- **Runtime adapters:** Pi today. Codex and Claude fail closed until implemented.
 
 ## Mental map
 
@@ -17,91 +25,21 @@ Idea → Spec → Design → Architecture → Plan → Build → Verify → Rele
                   Taste and project memory
 ```
 
-The stages can overlap when the work permits. The goal is to work autonomously within authorized scope. Current skills still contain approval prompts that need review against that goal.
+Stages can overlap. Small changes skip stages. Every stage has an audit with one verdict contract.
 
-| Area | Current implementation |
-|---|---|
-| Idea and spec | Skills ask about the user and problem, propose scope, and record decisions. |
-| UI and UX | The design skill starts from minimalist, Apple-inspired taste. It calls for research on up to three market leaders in the relevant segment and favors familiar flows when they fit. |
-| Architecture and scale | A skill asks for traffic, users, concurrency, data, growth, availability, and budget. It marks unknown values and requests approval for material decisions. |
-| Build and checks | Skills describe bounded implementation, tests, independent user scenarios when feasible, and browser-based visual review when available. |
-| Stage audits | Ten small audit skills use one verdict contract: `PASS: evidence`, `REVISE: findings`, or `BLOCKED: reason`. Work advances only on PASS. A self-audit is not independent review. |
-| Release | The release skill calls for audits before and after deployment. A pre-deployment audit pass does not grant deployment approval. Production health evidence requires the deployed revision, a target-appropriate check, and error or log evidence over a stated period. |
-| Taste and memory | A project index and an optional user-wide preference skill separate confirmed preferences from hypotheses. Cross-project preference loading is not yet tested. |
-| Routing and recovery | Draft skills select a task-specific route and describe safe recovery. They do not enforce transitions or restart processes. |
-| Security and evaluation | Release now requires security and privacy evidence or a justified not-applicable record. Evaluation and security checks remain partially manual. |
-| Learning | A draft skill captures lessons and suggests tests or workflow changes within authorized scope. |
-| Cost and delegation | The instructions prefer direct work unless authorized delegation offers a clear benefit. They do not select a model or enforce a budget. |
-| Clear language | The repository includes an MIT-licensed upstream ASD-STE100-inspired skill. It does not include the official dictionary or certify compliance. |
+## Install the skills
 
-These are **instructions**, not proof that agents will follow them or that the checks will run.
-
-## Run the simulator
-
-```sh
-python3 factory.py /path/to/existing/test-project --goal "Example product"
-python3 -m unittest discover -s tests -v
-```
-
-The simulator creates `.factory/state.json` in the target directory. It does not write product code or make external calls. Repeat the same command to resume a simulated run. `--fail-stage verify` simulates a failed audit. `--mode pi` makes one read-only Pi request only when the user passes `--subscription-confirmed`. The flag is an attestation, not billing verification. No dollar limit is enforced. Do not use simulator results as production evidence.
-
-## Experimental Pi planning
-
-```sh
-python3 factory.py /path/to/existing/test-project --mode pi-plan --subscription-confirmed --goal "Your product idea" --research-query "public market search terms"
-```
-
-This makes up to ten Pi process calls for idea, spec, design, architecture, and plan. Add `--build-static` to generate a new `.factory-build/index.html`. The build uses one Pi call, may use one static repair call, and may use one browser repair call. It does not overwrite an existing prototype. A matching interrupted build can recover from its pending record. A `verification.json` records structural checks and a hash.
-
-After generation, the coordinator attempts an isolated browser check using Node.js, Chromium, and Bubblewrap. If any are unavailable, it reports browser verification as unavailable and does not claim a pass. The check covers page load, uncaught JavaScript errors, and horizontal overflow at two viewport sizes. A browser failure can trigger one Pi repair, saved separately without overwriting the original.
-
-To add product-specific checks, pass `--acceptance-file /path/to/acceptance.json` with `--build-static`. See `artifacts/calculator-test/acceptance.json` for an example. The contract supports bounded clicks, keys, resets, and DOM text or existence assertions. Keep acceptance criteria independent of the implementation; do not weaken them to pass a failure. These checks are not a complete functional test, security audit, or accessibility audit. Generated HTML is untrusted and is not deployed.
-
-The subprocesses have tools disabled. The optional research query is sent to Wikipedia; do not include secrets. `--reference-url` accepts up to three URLs from the configured public hosts. It returns static HTML only. Search snippets and page data are untrusted leads, not verified market-share evidence. Each audit uses a fresh runtime process, but it is not an independent human review or deterministic proof. Audits return `PASS: evidence`, `REVISE: findings`, or `BLOCKED: reason`. The run advances only on PASS and saves the verdict text. Planning outputs are stored under the target project's `.factory/` directory. A failed audit stops the run. The adapter cannot verify billing or enforce a dollar cap.
-
-## Runtime adapters
-
-Execution goes through a runtime adapter, selected with `--runtime pi|codex|claude`. Only the Pi adapter is implemented and tested. The Codex and Claude names are declared placeholders and fail closed before any process starts. The contract, command rules, and parity checklist are in `docs/runtime-adapters.md`. Adding an adapter must not copy another harness's flags without verification.
-
-## What has been tested?
-
-**Skill discovery and fixed-stage execution:** Pi discovered 25 packaged skills in an isolated local installation. A real Pi workflow ran the idea, spec, design, architecture, and plan stages in a fixed sequence. The coordinator supplied the stage and audit instructions explicitly. This does not prove that an agent can automatically select the right skill or playbook for an arbitrary request.
-
-**Calculator walkthrough:** A real Pi run generated a calculator prototype from a saved plan. Selected arithmetic, keyboard, click, accessibility-role, contrast, and viewport checks passed in isolated Chromium. A separate integration test passed 13 browser acceptance actions. Some repairs and test orchestration were manual. See `artifacts/calculator-test/review.md` and `artifacts/browser-acceptance-review.md`.
-
-**Still unverified:** Automatic task routing, a completely unattended idea-to-release run, full calculator acceptance and screen-reader behavior, real deployment, and independent security review. Model audits are not independent proof. Deployment, spending, installation, delegation, and merging require the applicable authorization.
-
-## Comparison with pstack
-
-This compares the draft with [Poteto's pstack](https://github.com/cursor/plugins/tree/main/pstack), not with gstack or Noodle. The pstack description below is based on its [README at commit `c742dd6`](https://github.com/cursor/plugins/blob/c742dd61706fbacc1b95f1a20b7b988cf096ce6c/pstack/README.md). We have not benchmarked either system.
-
-| Dimension | This factory | pstack |
-|---|---|---|
-| Main focus | Product-to-release work with engineering rigor, user taste, and an autonomous execution goal. | Engineering rigor: better, verifiable code and less unnecessary output. |
-| Routing | Draft routing skill and bug, feature, and refactor playbooks. Automatic routing is untested. | `poteto-mode` selects task-specific playbooks and invokes skills. |
-| Design taste | Explicit minimalist baseline, competitor-flow research, and a taste index. | Includes experience-first principles and specialized workflows; it is not centered on this user's taste profile. |
-| Architecture | A draft skill covers scale, contracts, data ownership, interfaces, alternatives, and failure modes. | An `architect` skill and engineering principles address design before implementation. |
-| Review | One small checklist per factory stage. Independent review is conditional. | Includes specialized review and multi-model workflows, including `interrogate`. |
-| Memory | Project files and an optional user-wide preference index. Cross-project preference loading is untested. | Includes `reflect`, `correct`, and other skills for improving workflows and encoding lessons. |
-| Autonomous execution | A simulator exercises stage gates and recovery. A separate read-only Pi call was tested. Full workflow execution is not implemented. | Provides autonomous-run and orchestration playbooks, subject to harness capabilities. |
-| Parallel work | Allowed only with authorization and a clear benefit. No model router is implemented here. | Provides model routing and parallel workflows such as `arena` and `swarm`. |
-| Maturity | Prototype with a partial calculator walkthrough; no unattended release. | A broader published skill stack with many playbooks and harness integrations. |
-
-The approaches are complementary. This project combines the product journey, user taste, and engineering rigor. pstack offers deeper engineering playbooks. Neither description proves quality, cost savings, or safety.
-
-## Use in Pi
-
-Pi discovers project skills under `.agents/skills/` when the project is in scope. Open Pi in this project and run `/reload` after changing the skills. Inspect Pi's skill list or startup diagnostics. Invoke a stage directly, for example `/skill:factory-idea`, when you need to force selection.
-
-### Install for other projects
-
-A Pi user can review this repository and install its skills from GitHub:
+Requires [Pi](https://pi.dev). Review the repository before installing it.
 
 ```sh
 pi install git:github.com/chintanpuggalok/software-factory
 ```
 
-For a new project, choose a location and start Pi there:
+Then run `/reload` in an active session.
+
+## Use the skills
+
+### Start a new product
 
 ```sh
 mkdir -p /path/to/my-project
@@ -109,26 +47,181 @@ cd /path/to/my-project
 pi
 ```
 
-If you have a separate `project-start` skill installed, run `/skill:project-start` first. Then run `/skill:factory-idea` and describe your idea. Without `project-start`, ask Pi to load the project instructions and context before starting.
+Inside Pi:
 
-Run `/reload` in an active session after installation. Installing the skills does not start an autonomous factory. The coordinator is still a prototype.
+```text
+/skill:project-start      # if you have this global skill
+/skill:factory-route
+```
 
-Pi loads the package skills globally, but does not create or automatically load a personal preference index. Run `/skill:factory-taste` to manage project and user-wide preferences. To load relevant preferences at project startup, add a short instruction to your own global agent rules after reviewing it. Keep your index at `~/.pi/agent/preferences/index.md`; do not commit personal preferences to a public repository.
+Describe the idea. `factory-route` records the goal, scope, release target, and completion criteria, then selects the next stage.
 
-This package contains all factory skills, not just preference memory. A project-local copy can create name collisions. The project rules refer to optional global `project-start`, `pi-subagents`, and autoresearch guidance that is not included here. Other users must provide equivalent rules or adapt those references. A local package install and skill discovery passed in an isolated Pi configuration. GitHub installation and cross-project preference loading have not been tested.
+If you do not have `project-start`, ask Pi to create `AGENTS.md`, `CONTEXT.md`, and `PLAN.md` first. Project rules and current requests take precedence over skill defaults.
 
-Start with a small idea. Review the decisions and artifacts at each stage. Do not interpret an agent's audit result as permission to spend, merge, or deploy.
+### Run one stage directly
+
+| Command | Use when |
+|---|---|
+| `/skill:factory-route` | Work enters the factory, or earlier work resumes |
+| `/skill:factory-idea` | Shaping a raw idea |
+| `/skill:factory-spec` | Defining scope and acceptance criteria |
+| `/skill:factory-design` | Choosing a visual and interaction direction |
+| `/skill:factory-architecture` | Setting scale targets, interfaces, and failure modes |
+| `/skill:factory-plan` | Splitting complex work |
+| `/skill:factory-build` | Implementing an authorized change |
+| `/skill:factory-verify` | Proving behavior |
+| `/skill:factory-visual-review` | Checking a running interface |
+| `/skill:factory-security` | Reviewing a trust boundary |
+| `/skill:factory-release` | Preparing a release |
+| `/skill:factory-recover` | Resuming after interruption or failure |
+| `/skill:factory-learn` | Capturing lessons and testing workflow changes |
+| `/skill:factory-taste` | Recording project or user-wide preferences |
+
+Use one workflow skill per stage. Load the matching `audit-*` skill when the output is ready. Do not advance on `REVISE` or `BLOCKED`.
+
+Preference memory is optional. Project preferences live in the product. User-wide preferences default to `~/.pi/agent/preferences/index.md`. Do not commit personal preferences to a public repository.
+
+## Use the coordinator
+
+The coordinator is a prototype CLI. It writes only under the target project's `.factory/` and `.factory-build/` directories.
+
+### Requirements
+
+- Python 3.10 or later.
+- Pi for real model calls.
+- Node.js 22+ for browser checks.
+- Chromium and Bubblewrap (`bwrap`) for isolated browser checks. Both are optional.
+
+### Simulate a full cycle
+
+No model calls and no external effects.
+
+```sh
+python3 factory.py /path/to/test-project --goal "Example product"
+python3 factory.py /path/to/test-project --goal "Example product" --fail-stage verify
+```
+
+### Plan with a real model
+
+```sh
+python3 factory.py /path/to/test-project \
+  --mode pi-plan --subscription-confirmed \
+  --goal "A local checklist app for one person"
+```
+
+This makes up to ten calls: one stage output and one audit for each of idea, spec, design, architecture, and plan. A failed audit stops the run and saves its verdict.
+
+Optional:
+
+```sh
+  --research-query "public market search terms"   # sent to Wikipedia; no secrets
+  --reference-url https://www.calculator.net/     # up to three approved hosts
+  --build-static                                  # generate one static HTML prototype
+  --acceptance-file /path/to/acceptance.json      # browser acceptance actions
+  --runtime pi                                    # codex and claude are not implemented
+```
+
+`--subscription-confirmed` is an attestation, not billing verification. The coordinator does not enforce a dollar limit.
+
+### What `--build-static` does
+
+1. Generates one new `.factory-build/index.html`. It never overwrites an existing prototype.
+2. Runs limited structural checks and adds a hash to `verification.json`.
+3. Makes one repair attempt if structural checks fail.
+4. Runs an isolated browser probe: page load, uncaught JavaScript errors, and horizontal overflow at mobile and desktop sizes.
+5. Makes one browser repair attempt if the probe fails, saved to `.factory-build/browser-repair/` without overwriting the original.
+
+If Chromium, Bubblewrap, or sandbox setup is unavailable, browser verification reports **unavailable**, not passed.
+
+### Acceptance contracts
+
+Add product-specific browser checks with a small JSON contract:
+
+```json
+{
+  "version": 1,
+  "actions": [
+    {"action": "click", "selector": "[data-digit='2']"},
+    {"action": "expect_text", "selector": "#display", "text": "2"}
+  ]
+}
+```
+
+Supported actions: `click`, `key`, `reset`, `expect_text`, `expect_exists`. A contract needs at least one assertion and at most 50 actions. Keep acceptance criteria independent of the implementation. Do not weaken them to pass a failure.
+
+See `artifacts/calculator-test/acceptance.json` for a 13-action example.
+
+### View a generated prototype
+
+```sh
+cd .factory-build
+python3 -m http.server 8000 --bind 127.0.0.1
+```
+
+Open `http://127.0.0.1:8000`.
+
+### Run the tests
+
+```sh
+python3 -m unittest discover -s tests -v
+```
+
+The suite covers state recovery, audit gating, planning, structural and browser verification, sandbox network isolation, and skill contracts. Browser tests skip when Chromium is unavailable.
+
+## Runtime adapters
+
+`--runtime` selects the execution adapter. Only `pi` is implemented and tested. `codex` and `claude` fail closed before any process starts.
+
+To add one, follow `docs/runtime-adapters.md`. Do not copy Pi flags into another harness without verifying its documented behavior.
+
+## Verified and unverified
+
+**Verified:**
+
+- 25 skills discovered from an isolated local package install, with no diagnostics.
+- Fixed-stage planning over Pi, with one audit per stage.
+- Calculator prototype passing 13 browser acceptance actions.
+- Sandbox network isolation, interrupted-build recovery, and bounded repair.
+- 65 automated tests.
+
+**Unverified:**
+
+- Automatic skill or playbook selection for an arbitrary request.
+- A completely unattended idea-to-release run.
+- Deployment and production health checks.
+- Full accessibility and screen-reader behavior.
+- Market-share evidence quality.
+- Formal ASD-STE100 compliance, which needs the official dictionary.
+
+Model audits are not independent proof. A self-audit is not independent review.
+
+## Comparison with pstack
+
+| Dimension | This factory | pstack |
+|---|---|---|
+| Focus | Product-to-release workflow with taste, scale planning, and browser evidence | Engineering rigor and task-specific playbooks |
+| Routing | `factory-route` with bug, feature, and refactor playbooks. Automatic selection untested | `poteto-mode` selects playbooks and invokes skills |
+| Design | Minimalist baseline, competitor-flow research, taste memory | Experience-first principles, not a personal taste profile |
+| Evidence | One audit per stage, static and browser checks, acceptance contracts | Specialized review and multi-model workflows |
+| Autonomy | Prototype coordinator; no unattended release | Autonomous-run and orchestration playbooks |
+| Maturity | Prototype with a partial calculator walkthrough | Broader published stack with many integrations |
+
+This comparison uses the [pstack README at commit `c742dd6`](https://github.com/cursor/plugins/blob/c742dd61706fbacc1b95f1a20b7b988cf096ce6c/pstack/README.md). Neither description proves quality, cost savings, or safety.
 
 ## Project files
 
+- `AGENTS.md`: factory operating rules.
 - `CONTEXT.md`: confirmed goals and current state.
 - `PLAN.md`: active milestone and blockers.
 - `decisions.md`: confirmed decisions and proposals.
+- `docs/runtime-adapters.md`: adapter contract.
 - `taste/index.md`: factory-local taste baseline.
 - `research/`: source-based evaluations.
-- `artifacts/`: review notes and validation evidence.
-- `.agents/skills/`: draft factory and audit skills.
+- `artifacts/`: reviews, tests, and the calculator prototype.
+- `.agents/skills/`: workflow, audit, and STE skills.
 
 ## Third-party material
 
-`.agents/skills/asd-ste100/` contains material from [danyuchn/asd-ste100-skill](https://github.com/danyuchn/asd-ste100-skill), pinned to commit `a4905d922500dd7530ca8a0eb9e4940494255709`. Its MIT license is included in that directory. The upstream linter is present but has not been run here. The official [ASD-STE100 standard](https://www.asd-ste100.org/) is not included, and compliance has not been verified.
+`.agents/skills/asd-ste100/` contains material from [danyuchn/asd-ste100-skill](https://github.com/danyuchn/asd-ste100-skill), pinned to commit `a4905d922500dd7530ca8a0eb9e4940494255709`. Its MIT license is included in that directory. The official [ASD-STE100 standard](https://www.asd-ste100.org/) is not included, and compliance has not been verified.
+
+Original project material is MIT licensed. See `LICENSE`.
