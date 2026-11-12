@@ -100,8 +100,8 @@ def _generate_locked(workspace, goal, state, folder, subscription_confirmed, inv
     if path.exists() or report_path.exists():
         raise FileExistsError('Prototype or verification record already exists')
     plan = state['stages'][-1]['output']
-    if len(plan) > 20000:
-        raise ValueError('Plan is too large')
+    if len(plan) > 120000:
+        raise ValueError('Plan exceeds 120000 characters')
     prompt = ('Create a single self-contained static HTML prototype for this goal and plan. '
               'Return only raw HTML, no Markdown. Include CSS and JavaScript inline. '
               'Do not use external scripts, network requests, or dependencies. '

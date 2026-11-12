@@ -1,0 +1,8 @@
+{
+  "sha256": "25e9afda686c39daa869190ccb4fac7f1485d3da98ed3b922439e1349eae6951",
+  "status": "passed",
+  "findings": [],
+  "scope": "basic static checks only; not a security audit or functional verification",
+  "browser_verified": false,
+  "goal_sha256": "488d330ccef99c00805ce3cc185916928be816afc876f27f310b261fbd086c90"
+}

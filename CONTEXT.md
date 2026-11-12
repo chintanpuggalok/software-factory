@@ -16,11 +16,11 @@
 - Pi lists the original stage skills after reload. Automatic routing and a product walkthrough remain untested.
 - Added draft skills for routing, recovery, security, evaluation, and learning. See `research/starred-factories.md`.
 - A user-wide preference index exists outside this repository. An isolated local Pi install discovered all 27 package skills. GitHub installation and cross-project preference loading remain untested.
-- An experimental workflow can plan and generate one static HTML prototype. A calculator test passed model-audited planning, fake-DOM checks, and selected isolated Chromium checks. Browser checks found contrast defects that were repaired manually. The coordinator does not deploy.
+- A live five-stage plan passed with the current default model, and a live static build passed structural and browser checks. The run found and fixed verdict markup, revision retry, durable artifacts, history budget, and timeout defects. The coordinator does not deploy. See `artifacts/live-run-review.md`.
 - Skills now use one audit verdict contract. Every stage skill names its audit and advances only on PASS. An audit removed three overlapping skills and merged their unique content into route, taste, and learn.
-- Execution now goes through a selectable runtime adapter. `pi` and `opencode` are implemented. The OpenCode adapter isolates each call with a private server, an injected restricted agent, and disabled project config. One successful model completion through it is blocked by provider quota. Codex and Claude fail closed. See `docs/runtime-adapters.md`.
+- Execution now goes through a selectable runtime adapter. `pi` and `opencode` are implemented. The OpenCode adapter isolates each call with a private server, an injected restricted agent, and disabled project config. Two real read-only completions passed through it, including a permitted file read with tool activity on stderr. Denial enforcement under the deny-all agent awaits one more free-quota window. Codex and Claude fail closed. See `docs/runtime-adapters.md`.
 - A Pi extension provides `/factory` as the single entry point, plus granular status, simulate, plan, build, and resume commands. The CLI is optional. The extension and its twelve core tests were exercised without model calls. It draws a bounded stage widget from coordinator progress lines.
-- An independent static review with `opencode-go/deepseek-v4.1-flash` accepted the gate-plumbing findings now applied. A live model smoke test of the new verdict contract was blocked by a provider usage limit.
+- An independent static review with `opencode-go/deepseek-v4.1-flash` accepted the gate-plumbing findings now applied. The live verdict contract now passes with the current default model.
 - Existing skill approval instructions predate the autonomous goal and require review. The goal does not authorize new spending, installations, or delegation.
 
 ## Confirmed expansion

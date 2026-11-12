@@ -297,14 +297,17 @@ The OpenCode adapter runs each call in a private server with an isolated configu
 - Fixed-stage planning over Pi, with one audit per stage.
 - Calculator prototype passing 13 browser acceptance actions.
 - Sandbox network isolation, interrupted-build recovery, and bounded repair.
-- 82 Python tests and 12 extension tests.
+- 91 Python tests and 12 extension tests.
 - The coordinator emits `PROGRESS` lines on stderr. The extension turns them into a live stage widget.
 - The Pi extension ran `/factory-status` and `/factory-simulate` in print mode without a CLI or model call.
 - The OpenCode adapter shape against a live OpenCode CLI: the injected agents resolve, the command parses, the response header goes to stderr, and the confirmation gate refuses before any process starts.
+- A live five-stage plan with the current default model: all stages passed, and each wrote `docs/factory/<stage>.md`.
+- A live static build after that plan: structural checks passed and the isolated browser probe passed. See `artifacts/live-run-review.md`.
+- Two real read-only completions through the OpenCode adapter via `factory.py --mode pi --runtime opencode`: one plain response and one with a permitted file read. Tool activity went to stderr, stdout held only the response, and exit codes were clean.
 
 **Unverified:**
 
-- A successful planning completion through the OpenCode adapter. Provider quota and balance ran out during testing, so output purity when a model attempts a denied tool is also unobserved.
+- Denial enforcement in a live run: whether a model that attempts a tool under the deny-all `factory-planner` agent sees clean refusal output. The account's small free quota ran out before this probe could repeat.
 
 - Automatic skill or playbook selection for an arbitrary request.
 - A completely unattended idea-to-release run.

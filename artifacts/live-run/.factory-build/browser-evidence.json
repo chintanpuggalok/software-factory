@@ -1,0 +1,27 @@
+{
+  "artifact": "/home/chint/projects/software_factory/artifacts/live-run/.factory-build/index.html",
+  "browser": {
+    "status": "passed",
+    "title": "Checklist",
+    "body_visible": true,
+    "viewports": [
+      {
+        "name": "mobile",
+        "width": 375,
+        "height": 812,
+        "no_horizontal_overflow": true
+      },
+      {
+        "name": "desktop",
+        "width": 1365,
+        "height": 900,
+        "no_horizontal_overflow": true
+      }
+    ],
+    "script_errors": [],
+    "acceptance_results": [],
+    "scope": "page load, uncaught JavaScript errors, horizontal overflow, and supplied acceptance actions only; not complete accessibility or security verification",
+    "sha256": "25e9afda686c39daa869190ccb4fac7f1485d3da98ed3b922439e1349eae6951"
+  },
+  "repair_attempted": false
+}

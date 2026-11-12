@@ -1,0 +1,785 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src 'none'; font-src 'none'; connect-src 'none'; base-uri 'none'; form-action 'none'">
+<title>Checklist</title>
+<style>
+  :root{
+    --bg:#f5f6f8;
+    --panel:#ffffff;
+    --ink:#161a20;
+    --ink-soft:#616b78;
+    --line:#e3e7ed;
+    --line-strong:#cfd6e0;
+    --accent:#2f6feb;
+    --accent-dark:#2258c4;
+    --focus:#1a4fd6;
+    --amber-bg:#fff6e8;
+    --amber-line:#f0cfa2;
+    --amber-ink:#7a4a10;
+    --red-bg:#fdeeee;
+    --red-line:#f2c4c4;
+    --red-ink:#8a2626;
+    --radius:12px;
+    --shadow:0 1px 2px rgba(17,24,39,.05), 0 6px 18px rgba(17,24,39,.05);
+  }
+
+  *,*::before,*::after{box-sizing:border-box}
+
+  html{-webkit-text-size-adjust:100%}
+
+  body{
+    margin:0;
+    min-height:100%;
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:16px;
+    line-height:1.5;
+    color:var(--ink);
+    background:
+      radial-gradient(120% 70% at 50% -20%, #e9eefb 0%, rgba(233,238,251,0) 62%),
+      var(--bg);
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .page{
+    width:100%;
+    max-width:620px;
+    margin:0 auto;
+    padding:clamp(20px,6vw,56px) clamp(14px,4vw,24px) 120px;
+  }
+
+  .masthead{margin:0 0 clamp(18px,4vw,26px)}
+  .masthead h1{
+    margin:0;
+    font-size:clamp(26px,5vw,32px);
+    line-height:1.15;
+    letter-spacing:-0.02em;
+    font-weight:700;
+  }
+  .tagline{margin:6px 0 0; color:var(--ink-soft); font-size:15px}
+
+  .banner{
+    margin:0 0 16px;
+    padding:12px 14px;
+    border:1px solid var(--amber-line);
+    background:var(--amber-bg);
+    color:var(--amber-ink);
+    border-radius:10px;
+    font-size:14px;
+    line-height:1.45;
+  }
+  .banner.alert{border-color:var(--red-line); background:var(--red-bg); color:var(--red-ink)}
+  .banner[hidden]{display:none}
+
+  .add{display:flex; gap:10px; margin:0 0 20px}
+
+  .input{
+    flex:1 1 auto;
+    min-width:0;
+    height:48px;
+    padding:0 14px;
+    font:inherit;
+    font-size:16px;
+    color:var(--ink);
+    background:var(--panel);
+    border:1px solid var(--line-strong);
+    border-radius:10px;
+    box-shadow:var(--shadow);
+  }
+  .input::placeholder{color:#98a2b0}
+  .input:focus-visible{outline:3px solid var(--focus); outline-offset:2px; border-color:var(--accent)}
+
+  .add-btn{
+    flex:0 0 auto;
+    height:48px;
+    padding:0 22px;
+    font:inherit;
+    font-weight:600;
+    color:#fff;
+    background:var(--accent);
+    border:1px solid transparent;
+    border-radius:10px;
+    cursor:pointer;
+    box-shadow:var(--shadow);
+  }
+  .add-btn:hover{background:var(--accent-dark)}
+  .add-btn:active{transform:translateY(1px)}
+  .add-btn:focus-visible{outline:3px solid var(--focus); outline-offset:2px}
+
+  .empty{
+    margin:0 0 20px;
+    padding:22px 18px;
+    text-align:center;
+    color:var(--ink-soft);
+    font-size:15px;
+    border:1px dashed var(--line-strong);
+    border-radius:var(--radius);
+    background:rgba(255,255,255,.6);
+  }
+  .empty[hidden]{display:none}
+
+  .tasks{
+    list-style:none;
+    margin:0;
+    padding:0;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .tasks[hidden]{display:none}
+
+  .task{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    min-height:56px;
+    padding:4px 6px 4px 4px;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+  }
+
+  .check{
+    flex:0 0 auto;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:44px;
+    height:44px;
+    border-radius:9px;
+    cursor:pointer;
+  }
+  .toggle{
+    width:21px;
+    height:21px;
+    margin:0;
+    accent-color:var(--accent);
+    cursor:pointer;
+  }
+  .toggle:focus-visible{outline:3px solid var(--focus); outline-offset:3px}
+
+  .text{
+    flex:1 1 auto;
+    min-width:0;
+    padding:10px 0;
+    font-size:16px;
+    overflow-wrap:anywhere;
+    cursor:pointer;
+  }
+
+  .task[data-completed="true"]{background:#fbfcfd}
+  .task[data-completed="true"] .text{
+    color:var(--ink-soft);
+    text-decoration:line-through;
+    text-decoration-thickness:1.5px;
+  }
+
+  .delete{
+    flex:0 0 auto;
+    width:44px;
+    height:44px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font:inherit;
+    font-size:15px;
+    line-height:1;
+    color:var(--ink-soft);
+    background:transparent;
+    border:1px solid transparent;
+    border-radius:9px;
+    cursor:pointer;
+  }
+  .delete:hover{color:#9d2b22; background:#fdeeee; border-color:#f4cfcb}
+  .delete:focus-visible{outline:3px solid var(--focus); outline-offset:1px}
+
+  .hint{
+    margin:22px 0 0;
+    color:#8b95a3;
+    font-size:13px;
+    text-align:center;
+  }
+
+  .toast{
+    position:fixed;
+    left:50%;
+    bottom:22px;
+    transform:translateX(-50%);
+    z-index:20;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    max-width:calc(100vw - 28px);
+    padding:10px 10px 10px 18px;
+    color:#fff;
+    background:#1c2430;
+    border-radius:12px;
+    box-shadow:0 12px 34px rgba(15,23,42,.32);
+    animation:toast-in .18s ease-out;
+  }
+  .toast[hidden]{display:none}
+  .toast span{font-size:15px}
+
+  .undo{
+    min-height:44px;
+    padding:0 16px;
+    font:inherit;
+    font-weight:600;
+    color:#fff;
+    background:transparent;
+    border:1px solid rgba(255,255,255,.42);
+    border-radius:9px;
+    cursor:pointer;
+  }
+  .undo:hover{background:rgba(255,255,255,.12)}
+  .undo:focus-visible{outline:3px solid #fff; outline-offset:2px}
+
+  @keyframes toast-in{
+    from{opacity:0; transform:translate(-50%,8px)}
+    to{opacity:1; transform:translate(-50%,0)}
+  }
+
+  .sr-only{
+    position:absolute;
+    width:1px;
+    height:1px;
+    margin:-1px;
+    padding:0;
+    overflow:hidden;
+    clip:rect(0 0 0 0);
+    clip-path:inset(50%);
+    white-space:nowrap;
+    border:0;
+  }
+
+  .noscript{
+    margin:0;
+    padding:16px;
+    text-align:center;
+    color:var(--red-ink);
+    background:var(--red-bg);
+    border-bottom:1px solid var(--red-line);
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important}
+    .toast{animation:none}
+    .add-btn:active{transform:none}
+  }
+
+  @media (max-width:380px){
+    .add-btn{padding:0 16px}
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <header class="masthead">
+    <h1>Checklist</h1>
+    <p class="tagline">One person, one device. Nothing leaves this browser.</p>
+  </header>
+
+  <div id="banner" class="banner" role="status" hidden></div>
+
+  <form id="add-form" class="add" novalidate>
+    <label class="sr-only" for="task-input">New task</label>
+    <input id="task-input" class="input" type="text" name="task" placeholder="Add a task…" autocomplete="off" spellcheck="true">
+    <button class="add-btn" type="submit">Add</button>
+  </form>
+
+  <p id="empty-state" class="empty">No tasks yet. Add the first one above.</p>
+  <ul id="task-list" class="tasks" aria-label="Tasks"></ul>
+
+  <p class="hint">Saved in this browser only — no account, no sync.</p>
+</div>
+
+<div id="toast" class="toast" role="status" hidden>
+  <span id="toast-text">Task deleted.</span>
+  <button id="undo-btn" class="undo" type="button">Undo</button>
+</div>
+
+<div id="live" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
+<noscript><p class="noscript">This checklist needs JavaScript enabled.</p></noscript>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ------------------------------------------------------------------ *
+   * Harness hook: window.factoryCompute(a, operator, b)
+   * ------------------------------------------------------------------ */
+  window.factoryCompute = function (a, operator, b) {
+    var x = typeof a === 'number' ? a : parseFloat(a);
+    var y = typeof b === 'number' ? b : parseFloat(b);
+    if (!isFinite(x) || !isFinite(y)) return NaN;
+    switch (String(operator).trim()) {
+      case '+': case 'add': return x + y;
+      case '-': case 'subtract': return x - y;
+      case '*': case 'x': case 'multiply': return x * y;
+      case '/': case 'divide': return x / y;
+      case '%': case 'mod': return x % y;
+      default: return NaN;
+    }
+  };
+
+  /* ================================ domain ================================ */
+
+  function isPlainObject(value) {
+    return typeof value === 'object' && value !== null && !Array.isArray(value);
+  }
+
+  function isValidTask(task) {
+    return (
+      isPlainObject(task) &&
+      typeof task.id === 'string' && task.id.length > 0 &&
+      typeof task.text === 'string' && task.text.trim().length > 0 &&
+      typeof task.completed === 'boolean' &&
+      typeof task.createdAt === 'number' && isFinite(task.createdAt)
+    );
+  }
+
+  function validatePayload(payload) {
+    if (!isPlainObject(payload)) return null;
+    if (payload.version !== 1) return null;
+    if (!Array.isArray(payload.tasks)) return null;
+
+    var tasks = [];
+    var seen = Object.create(null);
+
+    for (var i = 0; i < payload.tasks.length; i++) {
+      var candidate = payload.tasks[i];
+      if (!isValidTask(candidate)) return null;
+      if (seen[candidate.id]) return null;
+      seen[candidate.id] = true;
+      tasks.push({
+        id: candidate.id,
+        text: candidate.text,
+        completed: candidate.completed,
+        createdAt: candidate.createdAt
+      });
+    }
+    return tasks;
+  }
+
+  function freshId() {
+    try {
+      if (typeof crypto !== 'undefined' && crypto && typeof crypto.randomUUID === 'function') {
+        return crypto.randomUUID();
+      }
+    } catch (err) { /* fall through to the fallback generator */ }
+    return 't-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+  }
+
+  function makeId(taken) {
+    for (var attempt = 0; attempt < 8; attempt++) {
+      var id = freshId();
+      if (!taken[id]) return id;
+    }
+    var n = 0;
+    while (taken['t-fallback-' + n]) n++;
+    return 't-fallback-' + n;
+  }
+
+  function makeTask(text, taken, now) {
+    var clean = String(text == null ? '' : text).trim();
+    if (!clean) return null;
+    return { id: makeId(taken), text: clean, completed: false, createdAt: now };
+  }
+
+  /* =============================== storage =============================== *
+   * Every localStorage reference in this file lives in this block.
+   * load() never writes the primary key — see the recovery rule table.
+   * ---------------------------------------------------------------------- */
+
+  var STORAGE_KEY = 'checklist.v1';
+  var BACKUP_KEY = 'checklist.v1.corrupt-backup';
+
+  function load() {
+    var raw;
+    try {
+      raw = window.localStorage.getItem(STORAGE_KEY);
+    } catch (err) {
+      return { status: 'unavailable' };
+    }
+
+    if (raw === null) return { status: 'empty' };
+
+    var parsed;
+    try {
+      parsed = JSON.parse(raw);
+    } catch (parseErr) {
+      return { status: 'corrupt', raw: raw };
+    }
+
+    var tasks = validatePayload(parsed);
+    if (!tasks) return { status: 'corrupt', raw: raw };
+
+    return { status: 'ok', tasks: tasks };
+  }
+
+  function backup(raw) {
+    try {
+      var existing = window.localStorage.getItem(BACKUP_KEY);
+      if (existing === raw) return true;
+      window.localStorage.setItem(BACKUP_KEY, raw);
+      return true;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  function save(tasks) {
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, tasks: tasks }));
+      return true;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  /* =========================== state and elements ========================== */
+
+  var el = {
+    form: document.getElementById('add-form'),
+    input: document.getElementById('task-input'),
+    list: document.getElementById('task-list'),
+    empty: document.getElementById('empty-state'),
+    banner: document.getElementById('banner'),
+    toast: document.getElementById('toast'),
+    toastText: document.getElementById('toast-text'),
+    undo: document.getElementById('undo-btn'),
+    live: document.getElementById('live')
+  };
+
+  var UNDO_MS = 6000;
+
+  var state = { tasks: [] };
+  var pendingUndo = null;
+  var writesBlocked = false;
+  var persistence = 'ok';
+  var rowEls = Object.create(null);
+
+  var MSG = {
+    storageBlocked: "Changes won't be saved: this browser is refusing local storage. The checklist still works, but it will reset when you reload.",
+    corruptPreserved: "Your saved list couldn't be read, so it was set aside inside this browser and a new empty list was started. Nothing was overwritten.",
+    corruptUnbacked: "Your saved list couldn't be read and couldn't be set aside, so nothing will be written to this browser. Your stored data has been left untouched."
+  };
+
+  /* =============================== rendering =============================== */
+
+  function buildRow(task) {
+    var li = document.createElement('li');
+    li.className = 'task';
+    li.setAttribute('data-task-id', task.id);
+    li.setAttribute('data-completed', task.completed ? 'true' : 'false');
+
+    var check = document.createElement('label');
+    check.className = 'check';
+    check.setAttribute('for', 'chk-' + task.id);
+
+    var box = document.createElement('input');
+    box.type = 'checkbox';
+    box.className = 'toggle';
+    box.id = 'chk-' + task.id;
+    box.checked = task.completed;
+    check.appendChild(box);
+
+    var text = document.createElement('label');
+    text.className = 'text';
+    text.setAttribute('for', 'chk-' + task.id);
+    text.textContent = task.text;
+
+    var del = document.createElement('button');
+    del.type = 'button';
+    del.className = 'delete';
+    del.setAttribute('aria-label', 'Delete task: ' + task.text);
+    del.textContent = '\u2715';
+
+    li.appendChild(check);
+    li.appendChild(text);
+    li.appendChild(del);
+
+    rowEls[task.id] = li;
+    return li;
+  }
+
+  function render() {
+    rowEls = Object.create(null);
+
+    var frag = document.createDocumentFragment();
+    for (var i = 0; i < state.tasks.length; i++) {
+      frag.appendChild(buildRow(state.tasks[i]));
+    }
+
+    el.list.textContent = '';
+    el.list.appendChild(frag);
+
+    var hasTasks = state.tasks.length > 0;
+    el.list.hidden = !hasTasks;
+    el.empty.hidden = hasTasks;
+  }
+
+  function focusTask(taskId, part) {
+    var li = rowEls[taskId];
+    if (!li) { el.input.focus(); return; }
+    var target = li.querySelector(part === 'delete' ? '.delete' : '.toggle');
+    if (target) target.focus();
+    else el.input.focus();
+  }
+
+  function announce(message) {
+    el.live.textContent = '';
+    window.requestAnimationFrame(function () {
+      el.live.textContent = message;
+    });
+  }
+
+  function setBanner(message, alert) {
+    el.banner.textContent = message;
+    if (alert) el.banner.classList.add('alert');
+    else el.banner.classList.remove('alert');
+    el.banner.hidden = false;
+  }
+
+  /* =============================== persistence ============================= */
+
+  function persist() {
+    if (writesBlocked) return;
+    if (save(state.tasks)) return;
+    persistence = 'unavailable';
+    setBanner(MSG.storageBlocked, true);
+  }
+
+  /* ================================ actions ================================ */
+
+  function addTask() {
+    var taken = Object.create(null);
+    for (var i = 0; i < state.tasks.length; i++) taken[state.tasks[i].id] = true;
+
+    var task = makeTask(el.input.value, taken, Date.now());
+    if (!task) {
+      el.input.focus();
+      return;
+    }
+
+    state.tasks.unshift(task);
+    el.input.value = '';
+    persist();
+    render();
+    el.input.focus();
+    announce('Task added.');
+  }
+
+  function toggleTask(taskId) {
+    for (var i = 0; i < state.tasks.length; i++) {
+      if (state.tasks[i].id === taskId) {
+        var current = state.tasks[i];
+        state.tasks[i] = {
+          id: current.id,
+          text: current.text,
+          completed: !current.completed,
+          createdAt: current.createdAt
+        };
+        persist();
+        render();
+        focusTask(taskId, 'toggle');
+        return;
+      }
+    }
+  }
+
+  function deleteTask(taskId) {
+    var index = -1;
+    for (var i = 0; i < state.tasks.length; i++) {
+      if (state.tasks[i].id === taskId) { index = i; break; }
+    }
+    if (index === -1) return;
+
+    var task = state.tasks[index];
+    var prevId = index > 0 ? state.tasks[index - 1].id : null;
+    var nextId = index < state.tasks.length - 1 ? state.tasks[index + 1].id : null;
+
+    state.tasks.splice(index, 1);
+    pendingUndo = { task: task, prevId: prevId, nextId: nextId, index: index };
+
+    persist();
+    render();
+    showToast();
+
+    var neighbour = state.tasks[index] || state.tasks[index - 1];
+    if (neighbour) focusTask(neighbour.id, 'delete');
+    else el.input.focus();
+  }
+
+  function undoTask() {
+    if (!pendingUndo) return;
+
+    var snapshot = pendingUndo;
+    pendingUndo = null;
+    toastTimer.stop();
+    el.toast.hidden = true;
+
+    for (var i = 0; i < state.tasks.length; i++) {
+      if (state.tasks[i].id === snapshot.task.id) return;
+    }
+
+    var at = -1;
+
+    if (snapshot.prevId) {
+      for (var p = 0; p < state.tasks.length; p++) {
+        if (state.tasks[p].id === snapshot.prevId) { at = p + 1; break; }
+      }
+    }
+    if (at === -1 && snapshot.nextId) {
+      for (var n = 0; n < state.tasks.length; n++) {
+        if (state.tasks[n].id === snapshot.nextId) { at = n; break; }
+      }
+    }
+    if (at === -1) at = Math.min(snapshot.index, state.tasks.length);
+
+    state.tasks.splice(at, 0, snapshot.task);
+    persist();
+    render();
+    focusTask(snapshot.task.id, 'toggle');
+    announce('Task restored.');
+  }
+
+  /* ================================ undo toast ============================= */
+
+  var toastTimer = {
+    deadline: 0,
+    remaining: UNDO_MS,
+    paused: false,
+    intervalId: null,
+    start: function () {
+      this.stop();
+      this.paused = false;
+      this.remaining = UNDO_MS;
+      this.deadline = Date.now() + UNDO_MS;
+      var self = this;
+      this.intervalId = window.setInterval(function () { self.check(); }, 250);
+    },
+    stop: function () {
+      if (this.intervalId !== null) {
+        window.clearInterval(this.intervalId);
+        this.intervalId = null;
+      }
+    },
+    check: function () {
+      if (this.paused) return;
+      if (!pendingUndo) return;
+      if (Date.now() >= this.deadline) this.expire();
+    },
+    pause: function () {
+      this.check();
+      if (!pendingUndo || this.paused) return;
+      this.paused = true;
+      this.remaining = Math.max(0, this.deadline - Date.now());
+    },
+    resume: function () {
+      if (!pendingUndo || !this.paused) return;
+      this.paused = false;
+      this.deadline = Date.now() + this.remaining;
+    },
+    expire: function () {
+      this.stop();
+      this.paused = false;
+      pendingUndo = null;
+      var hadFocus = el.toast.contains(document.activeElement);
+      el.toast.hidden = true;
+      if (hadFocus) el.input.focus();
+    }
+  };
+
+  function showToast() {
+    el.toast.hidden = false;
+    toastTimer.start();
+  }
+
+  function checkExpiry() {
+    if (!pendingUndo) return;
+    toastTimer.check();
+  }
+
+  /* ================================ wiring ================================= */
+
+  el.form.addEventListener('submit', function (event) {
+    event.preventDefault();
+    addTask();
+  });
+
+  el.list.addEventListener('change', function (event) {
+    var target = event.target;
+    if (!target || target.type !== 'checkbox') return;
+    var li = target.closest ? target.closest('.task') : null;
+    if (!li) return;
+    toggleTask(li.getAttribute('data-task-id'));
+  });
+
+  el.list.addEventListener('click', function (event) {
+    var target = event.target;
+    var button = target && target.closest ? target.closest('.delete') : null;
+    if (!button) return;
+    var li = button.closest('.task');
+    if (!li) return;
+    deleteTask(li.getAttribute('data-task-id'));
+  });
+
+  el.undo.addEventListener('click', function (event) {
+    event.preventDefault();
+    undoTask();
+  });
+
+  el.toast.addEventListener('mouseenter', function () { toastTimer.pause(); });
+  el.toast.addEventListener('mouseleave', function () { toastTimer.resume(); });
+  el.toast.addEventListener('focusin', function () { toastTimer.pause(); });
+  el.toast.addEventListener('focusout', function (event) {
+    if (!el.toast.contains(event.relatedTarget)) toastTimer.resume();
+  });
+
+  document.addEventListener('pointerdown', checkExpiry, true);
+  document.addEventListener('keydown', checkExpiry, true);
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden) checkExpiry();
+  });
+
+  /* ================================= boot ================================== */
+
+  function boot() {
+    var loaded = load();
+
+    if (loaded.status === 'ok') {
+      state.tasks = loaded.tasks;
+    } else if (loaded.status === 'empty') {
+      state.tasks = [];
+    } else if (loaded.status === 'corrupt') {
+      state.tasks = [];
+      if (backup(loaded.raw)) {
+        persistence = 'recovered';
+        setBanner(MSG.corruptPreserved, false);
+      } else {
+        persistence = 'unavailable';
+        writesBlocked = true;
+        setBanner(MSG.corruptUnbacked, true);
+      }
+    } else {
+      persistence = 'unavailable';
+      state.tasks = [];
+      setBanner(MSG.storageBlocked, true);
+    }
+
+    render();
+    el.input.focus();
+  }
+
+  boot();
+})();
+</script>
+</body>
+</html>

@@ -1,15 +1,15 @@
 # OpenCode runtime adapter review
 
 ## Scope
-The author implemented and reviewed the OpenCode runtime adapter for the factory coordinator. This is a self-review, not an independent audit. One tiny real model call was made during setup checks; the account's free quota was already exhausted, so no paid call completed. Billing limits are not enforced.
+The author implemented and reviewed the OpenCode runtime adapter for the factory coordinator. This is a self-review, not an independent audit. Two tiny real calls on a free model were made through the adapter with the user's standing subscription authorization. Billing limits are not enforced.
 
 ## Evidence
 - `python3 -m unittest discover -s tests -v`: 82 tests passed. New tests cover the OpenCode adapter (9), runtime selection (2), CLI paths (3), and saved-runtime compatibility (2).
 - `node --test tests/test_extension_core.mjs`: 12 tests passed.
 - `factory.py --mode pi-plan --runtime codex`: `BLOCKED: codex adapter is not implemented; use one of: pi, opencode`, exit 2, no process started.
 - `factory.py --mode pi --runtime opencode` without `--subscription-confirmed`: `BLOCKED: Subscription not confirmed; no OpenCode call was made`, exit 2.
-- Live OpenCode CLI checks (free, no completed model call): `opencode run --agent <unknown>` fails fast with `Agent not found`; with `XDG_CONFIG_HOME` pointed at the adapter's configuration, the injected `factory-planner` and `factory-readonly` agents resolve; with `OPENCODE_DISABLE_PROJECT_CONFIG=1`, agents defined in the project `opencode.json` are not discovered; one successful tiny call returned `OK` on stdout with the `> agent · model` header on stderr.
-- The adapter ran end to end through `factory.py`: the real CLI accepted the generated configuration and command shape, the provider rejected the call (`Insufficient balance`), and the adapter passed the exit code and stderr through cleanly. No temporary configuration directories were left behind.
+- Live OpenCode CLI checks (free, no completed model call): `opencode run --agent <unknown>` fails fast with `Agent not found`; with `XDG_CONFIG_HOME` pointed at the adapter's configuration, the injected `factory-planner` and `factory-readonly` agents resolve; with `OPENCODE_DISABLE_PROJECT_CONFIG=1`, agents defined in the project `opencode.json` are not discovered.
+- Two real completions through the adapter via `factory.py --mode pi --runtime opencode --subscription-confirmed` with `FACTORY_OPENCODE_MODEL=opencode/glm-5.3-flash-free`: one plain response returned `OK` on stdout, exit 0; one with a tempting file-read request executed the permitted `read` tool, reported the file contents on stdout, and printed the tool activity (`→ Read NOTES.md`) on stderr. Both calls cleaned up their temporary configuration directories. Free-tier quota was exhausted between calls; billing limits are not enforced.
 
 ## Design
 - One call, one private server: `opencode run --standalone --agent <factory agent> [--model <m>] --archived --title factory -- <prompt>`.
@@ -20,11 +20,11 @@ The author implemented and reviewed the OpenCode runtime adapter for the factory
 - Planning, static build, and browser repair reuse the selected adapter through one invocation helper. The static build refuses a saved plan from a different runtime.
 
 ## Limitations
-- No successful planning call through the adapter: the OpenCode provider reported `Free usage limit reached` and the default model reported `Insufficient balance`. Denial behavior while a model attempts a denied tool, and `--format` behavior, are unobserved.
+- Denial enforcement in a live run is unobserved: whether a model that attempts a tool under the deny-all `factory-planner` agent sees clean refusal output. The read-only agent's permission grant was observed live; the deny-all agent reached the provider (config and agent resolution verified) but the account's small free quota ran out before a planner probe could complete.
 - Each call saves an archived session named `factory` in the user's OpenCode database. OpenCode has no no-session mode.
 - Permissions restrict tool execution, not provider traffic. The model provider itself uses the network by design.
 - The Pi extension does not pass `--runtime`; extension users select the adapter through `FACTORY_RUNTIME`.
-- `OPENCODE_DISABLE_PROJECT_CONFIG` and the injected agent permissions are documented OpenCode V2 behavior verified by agent-resolution probes, not by a completed restricted run.
+- `OPENCODE_DISABLE_PROJECT_CONFIG` and the injected agent permissions are documented OpenCode V2 behavior verified by agent-resolution probes and the permitted-read run, not by a denied-tool run.
 
 ## Next action
-Run one real read-only planning call through the adapter when provider quota or balance is available, and observe output purity when a model attempts a denied tool. Then decide whether the extension should pass `--runtime` through.
+Repeat the planner probe (deny-all agent, tempting file-read prompt) when the free quota resets or another provider is connected, and observe the refusal output. Then decide whether the extension should pass `--runtime` through.
