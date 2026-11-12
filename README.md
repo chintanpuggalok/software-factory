@@ -39,9 +39,9 @@ This installs the skills and the `/factory-*` commands. Run `/reload` in an acti
 
 An isolated local install confirmed that Pi discovers the extension and all 26 skills from the package. GitHub installation and cross-project preference loading are untested.
 
-## Use the skills
+## Use in a new project
 
-### Start a new product
+Create the project, start Pi there, and run the startup skill.
 
 ```sh
 mkdir -p /path/to/my-project
@@ -53,12 +53,46 @@ Inside Pi:
 
 ```text
 /skill:factory-project-start
+/factory-simulate A local checklist app for one person
+/factory-plan A local checklist app for one person
+```
+
+`factory-project-start` creates the continuity files. `/factory-simulate` exercises all eight stages with no model calls. `/factory-plan` runs idea through plan with one audit per stage. Add `/factory-build "..."` after a passed plan to generate and verify a static prototype.
+
+The package includes its own startup skill. You do not need a global `project-start` skill.
+
+## Use in an existing project
+
+Open Pi in the repository root. Keep your existing conventions.
+
+```sh
+cd /path/to/existing-repo
+pi
+```
+
+Inside Pi:
+
+```text
+/skill:factory-project-start
+/factory-status
 /skill:factory-route
 ```
 
-Describe the idea. `factory-project-start` loads or creates the project continuity files. `factory-route` records the goal, scope, release target, and completion criteria, then selects the next stage.
+- `factory-project-start` reads the existing `AGENTS.md`, `CONTEXT.md`, `PLAN.md`, `decisions.md`, and linked docs. It creates only the files that are missing and does not reorganize your work.
+- `/factory-status` reports any saved run, stage verdicts, and verification state. It writes nothing.
+- `factory-route` selects the next step. Use it instead of forcing the full stage sequence.
 
-The package includes its own startup skill. You do not need a global `project-start` skill.
+Use the skills for existing code:
+
+| Task | Start with |
+|---|---|
+| Fix a bug | `/skill:factory-route`, then the bug playbook and `factory-verify` |
+| Add a feature | `/skill:factory-route`, then the feature playbook |
+| Refactor | `/skill:factory-route`, then the refactor playbook |
+| Review a trust boundary | `/skill:factory-security` |
+| Prepare a release | `/skill:factory-release` |
+
+The coordinator's `/factory-build` generates a **single static HTML prototype** in `.factory-build/`. It does not modify an existing application or its dependencies. For an existing app, use the skills and your project's own tooling. The coordinator can still plan and record audits.
 
 ### Run one stage directly
 
@@ -86,9 +120,9 @@ Delegation is optional. If you use subagents, follow your harness's rules. The f
 
 Preference memory is optional. Project preferences live in the product. User-wide preferences default to `~/.pi/agent/preferences/index.md`. Do not commit personal preferences to a public repository.
 
-## Use the factory in Pi
+## Coordinator commands
 
-The package registers a Pi extension. You do not run a CLI.
+The package registers a Pi extension. You do not run a CLI. The commands work the same in new and existing projects.
 
 | Command | What it does | Model calls |
 |---|---|---|
