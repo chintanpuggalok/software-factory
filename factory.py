@@ -97,6 +97,8 @@ def main():
     parser.add_argument("workspace", help="Existing project directory")
     parser.add_argument("--goal", required=True, help="Goal for this run")
     parser.add_argument("--mode", choices=("simulate", "pi", "pi-plan"), default="simulate")
+    parser.add_argument("--runtime", choices=("pi", "codex", "claude"), default="pi",
+                        help="Execution adapter. Only pi is implemented.")
     parser.add_argument("--fail-stage", choices=STAGES, help="Simulate an audit failure")
     parser.add_argument("--build-static", action="store_true", help="After a passed Pi plan, generate one static HTML prototype")
     parser.add_argument("--acceptance-file", help="Optional JSON browser acceptance contract")
@@ -112,6 +114,17 @@ def main():
         parser.error('--acceptance-file requires --mode pi-plan')
     if args.mode == "pi-plan":
         import pi_workflow
+        import runtime_adapter
+        try:
+            runtime = runtime_adapter.get_runtime(args.runtime)
+            if not isinstance(runtime, runtime_adapter.PiRuntime):
+                raise runtime_adapter.RuntimeUnavailable(
+                    f"{args.runtime} adapter is not implemented; use --runtime pi")
+            if not runtime.available():
+                raise runtime_adapter.RuntimeUnavailable("The pi executable is not available")
+        except runtime_adapter.RuntimeUnavailable as exc:
+            print(f"BLOCKED: {exc}", file=sys.stderr)
+            return 2
         acceptance = None
         if args.acceptance_file:
             if not args.build_static:
@@ -131,7 +144,8 @@ def main():
             state, blocker = pi_workflow.run_plan(args.workspace, args.goal,
                                                   subscription_confirmed=args.subscription_confirmed,
                                                   research_query=args.research_query,
-                                                  reference_urls=args.reference_url)
+                                                  reference_urls=args.reference_url,
+                                                  runtime=runtime)
         except (OSError, ValueError, RuntimeError, subprocess.TimeoutExpired) as exc:
             print(f"BLOCKED: {exc}", file=sys.stderr)
             return 2

@@ -13,7 +13,7 @@ class PlanningTests(unittest.TestCase):
         calls = []
         def fake(workspace, prompt, confirmed):
             calls.append(prompt)
-            return 'PASS' if 'Return exactly PASS' in prompt else 'Draft with assumptions'
+            return 'PASS' if 'Return exactly one verdict' in prompt else 'Draft with assumptions'
         with tempfile.TemporaryDirectory() as folder:
             state, blocker = pi_workflow.run_plan(folder, 'test goal', subscription_confirmed=True, invoke_fn=fake)
             self.assertIsNone(blocker)
@@ -24,7 +24,7 @@ class PlanningTests(unittest.TestCase):
 
     def test_failed_audit_does_not_advance(self):
         def fake(workspace, prompt, confirmed):
-            return 'BLOCKED' if 'Return exactly PASS' in prompt else 'draft'
+            return 'BLOCKED' if 'Return exactly one verdict' in prompt else 'draft'
         with tempfile.TemporaryDirectory() as folder:
             state, blocker = pi_workflow.run_plan(folder, 'goal', subscription_confirmed=True, invoke_fn=fake)
             self.assertEqual(state['stages'], [])
@@ -52,7 +52,7 @@ class PlanningTests(unittest.TestCase):
         prompts = []
         def fake(workspace, prompt, confirmed):
             prompts.append(prompt)
-            return 'PASS' if 'Return exactly PASS' in prompt else 'stage evidence'
+            return 'PASS' if 'Return exactly one verdict' in prompt else 'stage evidence'
         with tempfile.TemporaryDirectory() as folder:
             pi_workflow.run_plan(folder, 'goal', subscription_confirmed=True,
                                  invoke_fn=fake, max_new_stages=2)
@@ -62,7 +62,7 @@ class PlanningTests(unittest.TestCase):
     def test_research_runs_once_for_design_and_is_persisted(self):
         calls = []
         def fake(workspace, prompt, confirmed):
-            return 'PASS' if 'Return exactly PASS' in prompt else 'draft'
+            return 'PASS' if 'Return exactly one verdict' in prompt else 'draft'
         def research(query):
             calls.append(query)
             return {'query': query, 'results': [], 'limitation': 'not evidence'}

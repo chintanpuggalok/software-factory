@@ -12,6 +12,8 @@
 - Use the local `danyuchn/asd-ste100-skill`.
 - Keep user-wide preferences outside the repository. Keep project decisions local.
 - Use Chromium and Bubblewrap as optional dependencies for isolated browser verification. Do not install them without authorization.
+- Use one audit verdict contract: `PASS: evidence`, `REVISE: findings`, `BLOCKED: reason`. Advance only on PASS.
+- Route execution through a runtime adapter. Only Pi is supported until another adapter is implemented and tested.
 
 ## Proposals, not approved
 - Use independent acceptance scenarios and browser-based design review.

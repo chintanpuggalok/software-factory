@@ -24,11 +24,13 @@ Build a Pi-based coordinator with durable project-local state. Test an end-to-en
 - The calculator test passed planning and generated a static prototype. Fake-DOM and isolated Chromium checks passed after manual contrast fixes. The generator is now available through `--build-static`. See `artifacts/calculator-test/review.md`.
 - Strengthened continuation and recovery instructions after an early stop. Three static instruction checks pass. Live agent behavior is not yet validated.
 - Added limited static checks, one repair attempt, and pending-record recovery. Tests include a real process interruption. See `artifacts/static-verification-review.md`.
-- Added optional isolated Chromium checks, one browser-repair attempt, and a bounded acceptance contract. Fifty-two tests pass. An integrated calculator run passed 13 acceptance actions. See `artifacts/browser-acceptance-review.md`.
+- Added optional isolated Chromium checks, one browser-repair attempt, and a bounded acceptance contract. An integrated calculator run passed 13 acceptance actions. See `artifacts/browser-acceptance-review.md`.
+- Applied the accepted findings from an independent static review. Every stage skill now names its audit, all ten audits share one verdict contract, release requires security evidence, artifact paths are defined, routing covers resume and all stages, and playbooks name their audits. See `artifacts/deepseek-skill-review.md`.
+- Added a runtime adapter layer. `pi` is implemented. `codex` and `claude` fail closed until implemented. Sixty-four tests pass.
 - The first review is in `artifacts/skill-review.md`. It predates the stage-specific audits.
 
 ## Next action
-Define a deployment target and release contract. Test additional interruption and recovery cases before enabling release.
+Run a live model smoke test of the new verdict contract when provider quota is available. Then define a deployment target and release contract.
 
 ## Blockers
-The calculator passed selected acceptance checks; full product correctness and screen-reader behavior remain unverified. Static reference pages and Wikipedia snippets do not verify market-share rankings. The adapter cannot enforce a dollar limit; the user accepts overages. Recovery for external effects and a real deployment target remain open. Cross-project preference loading is untested. Access to the applicable ASD-STE100 standard and compliance verification are needed.
+The provider returned "usage limit has been reached" during the live verdict smoke test. Live model validation and deployment are blocked until quota resets or the user runs `/kg auto continue`. Full product correctness and screen-reader behavior remain unverified. Static snippets do not verify market-share rankings. The adapter cannot enforce a dollar limit; the user accepts overages. Recovery for external effects and a real deployment target remain open. Cross-project preference loading is untested. Access to the applicable ASD-STE100 standard and compliance verification are needed.

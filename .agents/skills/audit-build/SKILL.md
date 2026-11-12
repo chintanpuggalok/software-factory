@@ -5,4 +5,4 @@ description: Audit implementation before verification. Use when a build change i
 
 # Audit the build
 
-Read the change, approved scope, and test evidence. Check scope, behavior, security risks, tests, and unresolved defects. Cite evidence for findings. Report pass, revise, or blocked. State the next action. Do not claim independent review when the author performs the audit.
+Read the change, approved scope, and test evidence. Check scope, behavior, security risks, tests, and unresolved defects. Cite evidence for findings. Report `PASS: evidence`, `REVISE: findings`, or `BLOCKED: reason`. State the next action. Record the verdict with the stage output. Do not claim independent review when the author performs the audit.

@@ -64,7 +64,7 @@ def generate(workspace, goal, *, subscription_confirmed=False, invoke_fn=invoke)
         raise ValueError('Invalid planning stage')
     if state.get('goal') != goal or [x.get('name') for x in state['stages']] != expected:
         raise ValueError('A matching completed planning run is required')
-    if any(x.get('audit') != 'PASS' or not x.get('output') for x in state['stages']):
+    if any(not str(x.get('audit', '')).startswith('PASS') or not x.get('output') for x in state['stages']):
         raise ValueError('Planning evidence is incomplete')
     if not subscription_confirmed:
         raise ValueError('Subscription confirmation is required')

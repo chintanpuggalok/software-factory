@@ -25,11 +25,11 @@ The stages can overlap when the work permits. The goal is to work autonomously w
 | UI and UX | The design skill starts from minimalist, Apple-inspired taste. It calls for research on up to three market leaders in the relevant segment and favors familiar flows when they fit. |
 | Architecture and scale | A skill asks for traffic, users, concurrency, data, growth, availability, and budget. It marks unknown values and requests approval for material decisions. |
 | Build and checks | Skills describe bounded implementation, tests, independent user scenarios when feasible, and browser-based visual review when available. |
-| Stage audits | Ten small audit skills give each stage a focused checklist. A self-audit is not independent review. |
-| Release | The release skill calls for audits before and after deployment. A pre-deployment audit pass does not grant deployment approval. |
+| Stage audits | Ten small audit skills use one verdict contract: `PASS: evidence`, `REVISE: findings`, or `BLOCKED: reason`. Work advances only on PASS. A self-audit is not independent review. |
+| Release | The release skill calls for audits before and after deployment. A pre-deployment audit pass does not grant deployment approval. Production health evidence requires the deployed revision, a target-appropriate check, and error or log evidence over a stated period. |
 | Taste and memory | A project index and an optional user-wide preference skill separate confirmed preferences from hypotheses. Cross-project preference loading is not yet tested. |
 | Routing and recovery | Draft skills select a task-specific route and describe safe recovery. They do not enforce transitions or restart processes. |
-| Security and evaluation | Draft skills describe security checks and reproducible workflow tests. Their coverage and automatic execution are untested. |
+| Security and evaluation | Release now requires security and privacy evidence or a justified not-applicable record. Evaluation and security checks remain partially manual. |
 | Learning | A draft skill captures lessons and suggests tests or workflow changes within authorized scope. |
 | Cost and delegation | The instructions prefer direct work unless authorized delegation offers a clear benefit. They do not select a model or enforce a budget. |
 | Clear language | The repository includes an MIT-licensed upstream ASD-STE100-inspired skill. It does not include the official dictionary or certify compliance. |
@@ -57,15 +57,19 @@ After generation, the coordinator attempts an isolated browser check using Node.
 
 To add product-specific checks, pass `--acceptance-file /path/to/acceptance.json` with `--build-static`. See `artifacts/calculator-test/acceptance.json` for an example. The contract supports bounded clicks, keys, resets, and DOM text or existence assertions. Keep acceptance criteria independent of the implementation; do not weaken them to pass a failure. These checks are not a complete functional test, security audit, or accessibility audit. Generated HTML is untrusted and is not deployed.
 
-The subprocesses have tools disabled. The optional research query is sent to Wikipedia; do not include secrets. `--reference-url` accepts up to three URLs from the configured public hosts. It returns static HTML only. Search snippets and page data are untrusted leads, not verified market-share evidence. Each audit uses a fresh Pi process, but it is not an independent human review or deterministic proof. Planning outputs are stored under the target project's `.factory/` directory. A failed audit stops the run. The adapter cannot verify billing or enforce a dollar cap.
+The subprocesses have tools disabled. The optional research query is sent to Wikipedia; do not include secrets. `--reference-url` accepts up to three URLs from the configured public hosts. It returns static HTML only. Search snippets and page data are untrusted leads, not verified market-share evidence. Each audit uses a fresh runtime process, but it is not an independent human review or deterministic proof. Audits return `PASS: evidence`, `REVISE: findings`, or `BLOCKED: reason`. The run advances only on PASS and saves the verdict text. Planning outputs are stored under the target project's `.factory/` directory. A failed audit stops the run. The adapter cannot verify billing or enforce a dollar cap.
 
-## What remains untested?
+## Runtime adapters
 
-**Live routing** means whether a real agent session discovers the right skills and loads them at the right time. Pi listed the original stage skills after reload. We have not verified discovery of the latest additions, automatic selection, audit invocation, or context use.
+Execution goes through a runtime adapter, selected with `--runtime pi|codex|claude`. Only the Pi adapter is implemented and tested. The Codex and Claude names are declared placeholders and fail closed before any process starts. The contract, command rules, and parity checklist are in `docs/runtime-adapters.md`. Adding an adapter must not copy another harness's flags without verification.
 
-**A product walkthrough** means trying the entire flow on a real, small product: capture an idea, agree on scope and design, set scale targets, build, test, review, and prepare a release. We have not run that end-to-end exercise. It would show whether the handoffs preserve decisions, whether approvals stop work at the right places, and whether the output meets the acceptance criteria.
+## What has been tested?
 
-A walkthrough does not require a production deployment. Deployment, spending, installation, delegation, and merging require the applicable approvals.
+**Skill discovery and fixed-stage execution:** Pi discovered 28 packaged skills in an isolated local installation. A real Pi workflow ran the idea, spec, design, architecture, and plan stages in a fixed sequence. The coordinator supplied the stage and audit instructions explicitly. This does not prove that an agent can automatically select the right skill or playbook for an arbitrary request.
+
+**Calculator walkthrough:** A real Pi run generated a calculator prototype from a saved plan. Selected arithmetic, keyboard, click, accessibility-role, contrast, and viewport checks passed in isolated Chromium. A separate integration test passed 13 browser acceptance actions. Some repairs and test orchestration were manual. See `artifacts/calculator-test/review.md` and `artifacts/browser-acceptance-review.md`.
+
+**Still unverified:** Automatic task routing, a completely unattended idea-to-release run, full calculator acceptance and screen-reader behavior, real deployment, and independent security review. Model audits are not independent proof. Deployment, spending, installation, delegation, and merging require the applicable authorization.
 
 ## Comparison with pstack
 
@@ -81,7 +85,7 @@ This compares the draft with [Poteto's pstack](https://github.com/cursor/plugins
 | Memory | Project files and an optional user-wide preference index. Cross-project preference loading is untested. | Includes `reflect`, `correct`, and other skills for improving workflows and encoding lessons. |
 | Autonomous execution | A simulator exercises stage gates and recovery. A separate read-only Pi call was tested. Full workflow execution is not implemented. | Provides autonomous-run and orchestration playbooks, subject to harness capabilities. |
 | Parallel work | Allowed only with authorization and a clear benefit. No model router is implemented here. | Provides model routing and parallel workflows such as `arena` and `swarm`. |
-| Maturity | Draft instructions; no product walkthrough yet. | A broader published skill stack with many playbooks and harness integrations. |
+| Maturity | Prototype with a partial calculator walkthrough; no unattended release. | A broader published skill stack with many playbooks and harness integrations. |
 
 The approaches are complementary. This project combines the product journey, user taste, and engineering rigor. pstack offers deeper engineering playbooks. Neither description proves quality, cost savings, or safety.
 

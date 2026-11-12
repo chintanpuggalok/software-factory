@@ -9,6 +9,6 @@ description: Explore UI and UX directions and define a design brief. Use when a 
 2. Define the market segment. Find up to three market leaders using reliable, dated market-share evidence. If evidence is missing, label alternatives as unverified. Do not present them as market leaders.
 3. Study their relevant user flows and design patterns. Record sources, access dates, and limits. Favor familiar flows when they fit the product. Do not copy protected assets or branding.
 4. Identify the core flow, important states, accessibility needs, and target devices. Present feasible directions and explain departures from familiar flows.
-5. Select a direction within authorized scope. Ask when a required decision or missing information blocks progress. Record the decision, examples, and reasons in a project design brief.
+5. Select a direction within authorized scope. Ask only for a consequential user decision that blocks progress. Record the decision, examples, and reasons in a project design brief.
 
-Do not claim approval without confirmation. At the stage change, hand over the goal, confirmed decisions, artifact paths, open questions, and next action. Load `factory-taste` only when recording or applying taste.
+Do not claim approval without confirmation. Send the output to `audit-design`. Advance only after `PASS: evidence`. At the stage change, hand over the goal, confirmed decisions, artifact paths, open questions, and next action. Load `factory-taste` only when recording or applying taste.

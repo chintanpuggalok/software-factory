@@ -5,3 +5,4 @@
 3. Define the target structure. Remove unnecessary complexity within scope. Do not add speculative abstractions.
 4. Change the structure in small steps. Run the behavior checks after each relevant step.
 5. Verify the result on the affected surface. Report behavior gaps and any intentional changes.
+6. Send the change to `audit-build` and `audit-verify`. Advance only after `PASS: evidence`. Hand over the goal, decisions, artifact paths, evidence, and next action.
