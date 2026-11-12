@@ -8,6 +8,8 @@ import {
   buildCoordinatorArgs,
   buildSimulationArgs,
   emptyModel,
+  nextAction,
+  parseFactoryArgs,
   parsePlanArgs,
   parseProgress,
   readStatus,
@@ -20,7 +22,7 @@ import {
 test('tokenizes quoted goals', () => {
   assert.deepEqual(parsePlanArgs('"a checklist app" --yes'), {
     goal: 'a checklist app',
-    options: { yes: true, researchQuery: null, referenceUrls: [], acceptanceFile: null, build: false },
+    options: { yes: true, researchQuery: null, referenceUrls: [], acceptanceFile: null, build: false, simulate: false },
   });
 });
 
@@ -110,4 +112,20 @@ test('maps saved verification to the widget line', () => {
   assert.deepEqual(verificationFromStatus({ verification: { status: 'passed' }, browser: { browser: { status: 'unavailable' } } }),
     { static: 'passed', browser: 'unavailable' });
   assert.equal(verificationFromStatus({}), null);
+});
+
+test('resolves the next action from saved state', () => {
+  const plan = (stages) => ({ plan: { goal: 'g', stages } });
+  const pass = (name) => ({ name, audit: 'PASS: ok' });
+  assert.equal(nextAction({}), 'plan');
+  assert.equal(nextAction(plan([pass('idea')])), 'plan');
+  assert.equal(nextAction({ plan: { goal: 'g', stages: [pass('idea')], blocked: { stage: 'idea' } } }), 'resume-plan');
+  assert.equal(nextAction(plan(['idea', 'spec', 'design', 'architecture', 'plan'].map(pass))), 'build');
+  assert.equal(nextAction({ ...plan(['idea', 'spec', 'design', 'architecture', 'plan'].map(pass)), verification: { status: 'passed' } }), 'done');
+});
+
+test('parses the single entry command without a goal', () => {
+  assert.deepEqual(parseFactoryArgs(''), { goal: '', options: { yes: false, researchQuery: null, referenceUrls: [], acceptanceFile: null, build: false, simulate: false } });
+  assert.equal(parseFactoryArgs('--simulate').options.simulate, true);
+  assert.match(parsePlanArgs('goal --simulate').error, /Unknown option/);
 });

@@ -6,7 +6,7 @@
  * spawns the existing coordinator.
  */
 import { spawn } from 'node:child_process';
-import { readFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 export function tokenize(text) {
@@ -40,9 +40,17 @@ const VALUE_FLAGS = {
 };
 
 export function parsePlanArgs(text) {
+  return parseArgs(text, { requireGoal: true });
+}
+
+export function parseFactoryArgs(text) {
+  return parseArgs(text, { requireGoal: false, allowSimulate: true });
+}
+
+function parseArgs(text, { requireGoal = true, allowSimulate = false } = {}) {
   const { tokens, error } = tokenize(text || '');
   if (error) return { error };
-  const options = { yes: false, researchQuery: null, referenceUrls: [], acceptanceFile: null, build: false };
+  const options = { yes: false, researchQuery: null, referenceUrls: [], acceptanceFile: null, build: false, simulate: false };
   const goal = [];
   for (let i = 0; i < tokens.length; i++) {
     const token = tokens[i];
@@ -50,9 +58,14 @@ export function parsePlanArgs(text) {
     const split = token.indexOf('=');
     const name = split === -1 ? token : token.slice(0, split);
     let value = split === -1 ? null : token.slice(split + 1);
-    if (name === '--yes' || name === '--build') {
+    if (name === '--yes' || name === '--build' || name === '--simulate') {
       if (split !== -1) return { error: `${name} does not take a value` };
-      if (name === '--yes') options.yes = true; else options.build = true;
+      if (name === '--yes') options.yes = true;
+      else if (name === '--build') options.build = true;
+      else {
+        if (!allowSimulate) return { error: 'Unknown option --simulate' };
+        options.simulate = true;
+      }
       continue;
     }
     if (!(name in VALUE_FLAGS)) return { error: `Unknown option ${name}` };
@@ -63,10 +76,29 @@ export function parsePlanArgs(text) {
     if (name === '--reference-url') options.referenceUrls.push(value);
     else options[VALUE_FLAGS[name]] = value;
   }
-  if (!goal.length) return { error: 'A goal is required' };
+  if (!goal.length && requireGoal) return { error: 'A goal is required' };
   if (options.referenceUrls.length > 3) return { error: 'At most three reference URLs' };
   if (options.researchQuery && options.researchQuery.length > 200) return { error: 'Research query is too long' };
   return { goal: goal.join(' '), options };
+}
+
+export function nextAction(status) {
+  const plan = status?.plan;
+  if (!plan) return 'plan';
+  const stages = Array.isArray(plan.stages) ? plan.stages : [];
+  if (plan.blocked) return 'resume-plan';
+  if (stages.length < 5 || stages.some((stage) => !String(stage.audit || '').startsWith('PASS'))) return 'plan';
+  if (!status.verification && !status.browser) return 'build';
+  return 'done';
+}
+
+export async function readEntry(workspace) {
+  return readJson(path.join(workspace, '.factory', 'entry.json'));
+}
+
+export async function writeEntry(workspace, entry) {
+  await mkdir(path.join(workspace, '.factory'), { recursive: true });
+  await writeFile(path.join(workspace, '.factory', 'entry.json'), JSON.stringify(entry, null, 2) + '\n');
 }
 
 export function buildCoordinatorArgs({ workspace, goal, options = {}, build = false }) {

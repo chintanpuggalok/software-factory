@@ -8,7 +8,7 @@ Inspired by [Poteto's pstack](https://github.com/cursor/plugins/tree/main/pstack
 
 ## What you get
 
-- **26 agent skills:** 15 workflow skills, 10 stage audits, and the ASD-STE100 writing skill. The package is self-contained. No external skill is required.
+- **27 agent skills:** 16 workflow skills, 10 stage audits, and the ASD-STE100 writing skill. The package is self-contained. No external skill is required.
 - **One coordinator:** Python, project-local state, resumable stages.
 - **One audit contract:** `PASS: evidence`, `REVISE: findings`, `BLOCKED: reason`. Work advances only on PASS.
 - **Optional browser checks:** isolated Chromium with an acceptance contract.
@@ -37,7 +37,7 @@ pi install git:github.com/chintanpuggalok/software-factory
 
 This installs the skills and the `/factory-*` commands. Run `/reload` in an active session, then run `/factory-status` in any project.
 
-An isolated local install confirmed that Pi discovers the extension and all 26 skills from the package. GitHub installation and cross-project preference loading are untested.
+An isolated local install confirmed that Pi discovers the extension and all 27 skills from the package. GitHub installation and cross-project preference loading are untested.
 
 ## Use in a new project
 
@@ -49,15 +49,29 @@ cd /path/to/my-project
 pi
 ```
 
-Inside Pi:
+Inside Pi, use one command:
 
 ```text
-/skill:factory-project-start
-/factory-simulate A local checklist app for one person
-/factory-plan A local checklist app for one person
+/factory A local checklist app for one person
 ```
 
-`factory-project-start` creates the continuity files. `/factory-simulate` exercises all eight stages with no model calls. `/factory-plan` runs idea through plan with one audit per stage. Add `/factory-build "..."` after a passed plan to generate and verify a static prototype.
+`/factory` creates the project state, plans the product, then builds and verifies a static prototype. Later runs restore the saved goal:
+
+```text
+/factory
+```
+
+Try it without model calls first:
+
+```text
+/factory A local checklist app for one person --simulate
+```
+
+Skills-only alternative, when the extension is not installed:
+
+```text
+/skill:factory A local checklist app for one person
+```
 
 The package includes its own startup skill. You do not need a global `project-start` skill.
 
@@ -70,16 +84,26 @@ cd /path/to/existing-repo
 pi
 ```
 
-Inside Pi:
+Inside Pi, start with one command:
+
+```text
+/factory
+```
+
+Or give a goal when the project has none saved:
+
+```text
+/factory Improve checkout error handling
+```
+
+`/factory` restores saved state and continues the next phase. `/factory-status` reports state without changing it. To work on an existing application, use the skills directly:
 
 ```text
 /skill:factory-project-start
-/factory-status
 /skill:factory-route
 ```
 
 - `factory-project-start` reads the existing `AGENTS.md`, `CONTEXT.md`, `PLAN.md`, `decisions.md`, and linked docs. It creates only the files that are missing and does not reorganize your work.
-- `/factory-status` reports any saved run, stage verdicts, and verification state. It writes nothing.
 - `factory-route` selects the next step. Use it instead of forcing the full stage sequence.
 
 Use the skills for existing code:
@@ -122,10 +146,11 @@ Preference memory is optional. Project preferences live in the product. User-wid
 
 ## Coordinator commands
 
-The package registers a Pi extension. You do not run a CLI. The commands work the same in new and existing projects.
+The package registers a Pi extension. You do not run a CLI. `/factory` is the normal entry point. The other commands are advanced controls.
 
 | Command | What it does | Model calls |
 |---|---|---|
+| `/factory [goal]` | Create or restore state, plan, then build and verify | Up to 13 |
 | `/factory-status` | Show the saved run, stage verdicts, and verification state | None |
 | `/factory-simulate <goal>` | Run the deterministic eight-stage simulation | None |
 | `/factory-plan <goal>` | Run idea, spec, design, architecture, and plan with one audit per stage | Up to 10 |
@@ -266,11 +291,11 @@ To add one, follow `docs/runtime-adapters.md`. Do not copy Pi flags into another
 
 **Verified:**
 
-- 26 skills discovered from an isolated local package install, with no diagnostics.
+- 27 skills discovered from an isolated local package install, with no diagnostics.
 - Fixed-stage planning over Pi, with one audit per stage.
 - Calculator prototype passing 13 browser acceptance actions.
 - Sandbox network isolation, interrupted-build recovery, and bounded repair.
-- 65 Python tests and 10 extension tests.
+- 66 Python tests and 12 extension tests.
 - The coordinator emits `PROGRESS` lines on stderr. The extension turns them into a live stage widget.
 - The Pi extension ran `/factory-status` and `/factory-simulate` in print mode without a CLI or model call.
 

@@ -36,6 +36,12 @@ class ContinuityInstructionTests(unittest.TestCase):
         self.assertIn('required authorization', text)
         self.assertIn('Never bypass safety gates or expand scope', text)
 
+    def test_single_entry_skill_restores_state(self):
+        text = read(SKILLS / 'factory/SKILL.md')
+        self.assertIn('.factory/entry.json', text)
+        self.assertIn('restore the saved goal', text)
+        self.assertIn('Do not start a new goal when a saved goal exists', text)
+
     def test_every_stage_skill_names_its_audit(self):
         for stage in STAGES:
             audit = AUDIT_FOR.get(stage, f'audit-{stage}')

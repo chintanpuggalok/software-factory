@@ -29,7 +29,7 @@ Build a Pi-based coordinator with durable project-local state. Test an end-to-en
 - Added a runtime adapter layer. `pi` is implemented. `codex` and `claude` fail closed until implemented. Sixty-four tests pass.
 - Audited each skill for need and usage. Removed three overlapping skills: `factory-autonomous`, `factory-preferences`, and `factory-eval`. Their unique content moved to `factory-route`, `factory-taste`, and `factory-learn`.
 - Added `factory-project-start` so the package does not depend on a global startup skill. An isolated Pi install now discovers 26 skills with no diagnostics. See `artifacts/skill-necessity-audit.md`.
-- Added a Pi extension so the factory runs from `/factory-*` commands without a CLI. Ten Node tests pass. The extension draws a live stage widget above the prompt. The extension ran `/factory-status` and `/factory-simulate` in Pi print mode. A plan without `--yes` refused before any model call.
+- Added a Pi extension so the factory runs from `/factory-*` commands without a CLI. Twelve Node tests pass. The extension draws a live stage widget above the prompt and `/factory` creates or restores state. The extension ran `/factory-status` and `/factory-simulate` in Pi print mode. A plan without `--yes` refused before any model call.
 - The first review is in `artifacts/skill-review.md`. It predates the stage-specific audits.
 
 ## Next action

@@ -2,7 +2,7 @@
 
 - Start substantive work with `factory-project-start`. Do not repeat startup at each stage. The package is self-contained for startup, routing, stage work, audits, and writing. Optional external delegation or autoresearch guidance is not required.
 - Use the project-local `asd-ste100` skill for factory instructions and artifacts. Apply the structural rules. Treat dictionary-dependent rules as required only when the official standard is available. Preserve meaning and requirements. Do not claim compliance without the official standard and dictionary.
-- Route tasks with `factory-route`. Use one factory skill for the active stage. Load the matching stage audit skill when the output is ready. Load other skills only when their specific task is needed.
+- Start or resume with `factory`. It creates or restores state, then delegates. Use `factory-route` when the next step is unclear. Use one factory skill for the active stage. Load the matching stage audit skill when the output is ready. Load other skills only when their specific task is needed.
 - Audit every stage before handoff. Use `PASS: evidence`, `REVISE: findings`, or `BLOCKED: reason`. Advance only on PASS. Fix issues within authorized scope and rerun the audit. Preserve the verdict and evidence.
 - Keep artifacts under the product project. Default locations are `docs/factory/spec.md`, `docs/factory/design.md`, `docs/factory/architecture.md`, and `docs/factory/plan.md`. Store run state in `.factory/state.json` and each audit verdict beside the artifact it checks. If the project has its own convention, reuse it and state which path you used.
 - Continue authorized work through implementation, verification, review, and handoff. A milestone or progress report is not a stop condition.
