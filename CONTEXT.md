@@ -16,20 +16,20 @@
 - Pi lists the original stage skills after reload. Automatic routing and a product walkthrough remain untested.
 - Added draft skills for routing, recovery, security, evaluation, and learning. See `research/starred-factories.md`.
 - A user-wide preference index exists outside this repository. An isolated local Pi install discovered all 28 package skills. GitHub installation and cross-project preference loading remain untested.
-- A deterministic coordinator simulator and read-only Pi adapter pass nine tests. One real read-only Pi prompt returned the expected text. The adapter does not execute the factory workflow or deploy.
+- An experimental Pi workflow can plan and generate one static HTML prototype. A calculator test passed model-audited planning, fake-DOM checks, and selected isolated Chromium checks. Browser checks found contrast defects that were repaired manually. The coordinator does not yet automatically verify, repair, or deploy.
 - Existing skill approval instructions predate the autonomous goal and require review. The goal does not authorize new spending, installations, or delegation.
 
 ## Confirmed expansion
 - Build an autonomous orchestration engine that can complete and improve projects.
-- Run end to end without routine human approval. Stop when external configuration or access blocks progress.
-- Use existing prepaid access. Do not add paid services or enable overage charges.
+- Run end to end without routine human approval. Continue after milestones. Stop only for a genuine blocker or required decision.
+- Use the existing subscription. The user accepts overage charges. Do not add paid services without authorization.
 - Add task-specific playbook routing and engineering rigor inspired by pstack.
 
 ## Proposed approach
-- The user approved a local Pi-based coordinator and stated that the account is subscription-based. The adapter cannot verify billing or enforce a dollar limit. External-effect recovery remains unimplemented. See `artifacts/coordinator-test.md`.
+- The user approved a local Pi-based coordinator and accepts subscription overages. The adapter cannot verify billing or enforce a dollar limit. External-effect recovery remains unimplemented. See `artifacts/pi-planning-smoke.md`.
 
 ## Open decisions
-- Orchestration architecture, runtime, prepaid-only enforcement, delegation permissions, and deployment targets.
+- The detailed orchestration design, usage metering, delegation permissions, and deployment targets.
 - Cross-project installation and preference discovery need validation. Confirm privacy and conflict behavior in other agent environments.
 - Access to the applicable ASD-STE100 standard and controlled vocabulary, and a method to verify compliance.
 

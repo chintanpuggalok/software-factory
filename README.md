@@ -4,7 +4,7 @@ A draft software factory for turning product ideas into verified releases. It ai
 
 Inspired by [Poteto's pstack](https://github.com/cursor/plugins/tree/main/pstack), particularly its engineering principles and task-specific playbooks. This project adapts those ideas to a product-to-release workflow with design taste and scale planning.
 
-**Status: prototype.** A deterministic simulator records stage and audit results in project-local state. A separate read-only adapter can make one Pi request after user attestation. It does not execute the factory stages, build a product, or deploy. Live routing and a real product walkthrough remain untested.
+**Status: prototype.** An experimental Pi workflow runs planning stages with model tools disabled. It can generate a single static HTML prototype, run limited structural and isolated browser checks, and request bounded repairs. A calculator prototype passed selected Chromium checks. The coordinator does not deploy automatically. Market-share claims remain unverified.
 
 ## Mental map
 
@@ -44,6 +44,20 @@ python3 -m unittest discover -s tests -v
 ```
 
 The simulator creates `.factory/state.json` in the target directory. It does not write product code or make external calls. Repeat the same command to resume a simulated run. `--fail-stage verify` simulates a failed audit. `--mode pi` makes one read-only Pi request only when the user passes `--subscription-confirmed`. The flag is an attestation, not billing verification. No dollar limit is enforced. Do not use simulator results as production evidence.
+
+## Experimental Pi planning
+
+```sh
+python3 factory.py /path/to/existing/test-project --mode pi-plan --subscription-confirmed --goal "Your product idea" --research-query "public market search terms"
+```
+
+This makes up to ten Pi process calls for idea, spec, design, architecture, and plan. Add `--build-static` to generate a new `.factory-build/index.html`. The build uses one Pi call, may use one static repair call, and may use one browser repair call. It does not overwrite an existing prototype. A matching interrupted build can recover from its pending record. A `verification.json` records structural checks and a hash.
+
+After generation, the coordinator attempts an isolated browser check using Node.js, Chromium, and Bubblewrap. If any are unavailable, it reports browser verification as unavailable and does not claim a pass. The check covers page load, uncaught JavaScript errors, and horizontal overflow at two viewport sizes. A browser failure can trigger one Pi repair, saved separately without overwriting the original.
+
+To add product-specific checks, pass `--acceptance-file /path/to/acceptance.json` with `--build-static`. See `artifacts/calculator-test/acceptance.json` for an example. The contract supports bounded clicks, keys, resets, and DOM text or existence assertions. Keep acceptance criteria independent of the implementation; do not weaken them to pass a failure. These checks are not a complete functional test, security audit, or accessibility audit. Generated HTML is untrusted and is not deployed.
+
+The subprocesses have tools disabled. The optional research query is sent to Wikipedia; do not include secrets. `--reference-url` accepts up to three URLs from the configured public hosts. It returns static HTML only. Search snippets and page data are untrusted leads, not verified market-share evidence. Each audit uses a fresh Pi process, but it is not an independent human review or deterministic proof. Planning outputs are stored under the target project's `.factory/` directory. A failed audit stops the run. The adapter cannot verify billing or enforce a dollar cap.
 
 ## What remains untested?
 

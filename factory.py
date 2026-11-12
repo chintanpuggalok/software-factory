@@ -96,13 +96,76 @@ def main():
     parser = argparse.ArgumentParser(description="Run a simulated factory workflow")
     parser.add_argument("workspace", help="Existing project directory")
     parser.add_argument("--goal", required=True, help="Goal for this run")
-    parser.add_argument("--mode", choices=("simulate", "pi"), default="simulate")
+    parser.add_argument("--mode", choices=("simulate", "pi", "pi-plan"), default="simulate")
     parser.add_argument("--fail-stage", choices=STAGES, help="Simulate an audit failure")
+    parser.add_argument("--build-static", action="store_true", help="After a passed Pi plan, generate one static HTML prototype")
+    parser.add_argument("--acceptance-file", help="Optional JSON browser acceptance contract")
+    parser.add_argument("--research-query", help="Public search query sent to Wikipedia; do not include secrets")
+    parser.add_argument("--reference-url", action="append", default=[],
+                        help="Public reference URL from the approved host list; up to three")
     parser.add_argument("--subscription-confirmed", action="store_true",
                         help="Attest the Pi account is subscription-only; no dollar cap is enforced")
     args = parser.parse_args()
     if not args.goal.strip():
         parser.error("--goal must not be empty")
+    if args.acceptance_file and args.mode != 'pi-plan':
+        parser.error('--acceptance-file requires --mode pi-plan')
+    if args.mode == "pi-plan":
+        import pi_workflow
+        acceptance = None
+        if args.acceptance_file:
+            if not args.build_static:
+                parser.error('--acceptance-file requires --build-static')
+            try:
+                import browser_verify
+                contract = Path(args.acceptance_file).read_text(encoding='utf-8')
+                if len(contract) > 50000:
+                    raise ValueError('Acceptance contract exceeds size limit')
+                acceptance = browser_verify.validate_acceptance(json.loads(contract))
+            except (OSError, ValueError) as exc:
+                print(f'BLOCKED: invalid acceptance contract: {exc}', file=sys.stderr)
+                return 2
+        try:
+            if args.subscription_confirmed:
+                print("WARNING: up to 10 planning calls, 2 build calls, and 1 browser repair call; no dollar limit is enforced.", file=sys.stderr)
+            state, blocker = pi_workflow.run_plan(args.workspace, args.goal,
+                                                  subscription_confirmed=args.subscription_confirmed,
+                                                  research_query=args.research_query,
+                                                  reference_urls=args.reference_url)
+        except (OSError, ValueError, RuntimeError, subprocess.TimeoutExpired) as exc:
+            print(f"BLOCKED: {exc}", file=sys.stderr)
+            return 2
+        if blocker:
+            print(json.dumps(state, indent=2))
+            print(f"BLOCKED: {blocker}", file=sys.stderr)
+            return 1
+        if args.build_static:
+            import pi_static
+            try:
+                original = pi_static.generate(args.workspace, args.goal,
+                                              subscription_confirmed=args.subscription_confirmed)
+                import browser_pipeline
+                import browser_verify
+                browser_result = browser_pipeline.verify_and_repair(
+                    args.workspace, args.goal, original, subscription_confirmed=args.subscription_confirmed,
+                    probe_fn=lambda path: browser_verify.probe(path, acceptance=acceptance))
+                state['prototype_path'] = browser_result['artifact']
+                state['browser_verification'] = browser_result
+                fd, evidence_path = tempfile.mkstemp(prefix='browser-evidence-', suffix='.json', dir=original.parent)
+                with os.fdopen(fd, 'w', encoding='utf-8') as evidence:
+                    json.dump(browser_result, evidence, indent=2)
+                    evidence.write('\n')
+                state['browser_evidence_path'] = evidence_path
+            except (OSError, ValueError, RuntimeError, subprocess.TimeoutExpired) as exc:
+                print(json.dumps(state, indent=2))
+                print(f"BLOCKED: prototype generation or verification failed: {exc}", file=sys.stderr)
+                return 2
+            if browser_result['browser']['status'] != 'passed':
+                print(json.dumps(state, indent=2))
+                print('BLOCKED: browser verification did not pass.', file=sys.stderr)
+                return 1 if browser_result['browser']['status'] == 'failed' else 2
+        print(json.dumps(state, indent=2))
+        return 0
     if args.mode == "pi":
         try:
             if args.subscription_confirmed:

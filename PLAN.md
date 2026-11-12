@@ -6,7 +6,7 @@ Build a Pi-based coordinator with durable project-local state. Test an end-to-en
 ## Acceptance criteria
 - State transitions, evidence, audit gates, and restart recovery are tested.
 - A simulated product run reaches a simulated release. Failure cases do not advance.
-- Real model calls remain blocked when prepaid-only enforcement cannot be verified.
+- Model calls require explicit subscription attestation. Report that billing and usage limits are not enforced.
 - Existing skill and preference boundaries remain explicit.
 - A real product walkthrough and formal ASD-STE100 compliance remain separate unverified gates.
 
@@ -20,12 +20,15 @@ Build a Pi-based coordinator with durable project-local state. Test an end-to-en
 - Added draft task playbooks, architecture guidance, and an autonomous-run skill inspired by pstack. These instructions are not an orchestration engine.
 - Added a user-wide preference index, preference skill, and Pi package manifest. An isolated local Pi installation discovered 28 skills without diagnostics. GitHub installation and cross-project preference loading remain untested.
 - Completed a self-review of the project. See `artifacts/end-to-end-review.md`.
-- Implemented a local deterministic simulator, read-only Pi adapter, and MIT license. Nine tests pass. One real read-only Pi prompt returned the expected text. See `artifacts/coordinator-test.md`.
-- Live routing and product execution remain untested.
+- Implemented a local simulator, Pi adapter, no-tools planning loop, bounded Wikipedia search, and MIT license. Eighteen tests pass. A real sample passed five model-audited planning stages. See `artifacts/pi-planning-smoke.md`.
+- The calculator test passed planning and generated a static prototype. Fake-DOM and isolated Chromium checks passed after manual contrast fixes. The generator is now available through `--build-static`. See `artifacts/calculator-test/review.md`.
+- Strengthened continuation and recovery instructions after an early stop. Three static instruction checks pass. Live agent behavior is not yet validated.
+- Added limited static checks, one repair attempt, and pending-record recovery. Tests include a real process interruption. See `artifacts/static-verification-review.md`.
+- Added optional isolated Chromium checks, one browser-repair attempt, and a bounded acceptance contract. Fifty-two tests pass. An integrated calculator run passed 13 acceptance actions. See `artifacts/browser-acceptance-review.md`.
 - The first review is in `artifacts/skill-review.md`. It predates the stage-specific audits.
 
 ## Next action
-Identify a provider-supported hard spending limit. Then implement stage execution and safe recovery for external effects.
+Define a deployment target and release contract. Test additional interruption and recovery cases before enabling release.
 
 ## Blockers
-The adapter cannot verify billing or enforce a dollar limit. Full stage execution and a real deployment target remain open. Cross-project preference loading is untested. Access to the applicable ASD-STE100 standard and compliance verification are needed.
+The calculator passed selected acceptance checks; full product correctness and screen-reader behavior remain unverified. Static reference pages and Wikipedia snippets do not verify market-share rankings. The adapter cannot enforce a dollar limit; the user accepts overages. Recovery for external effects and a real deployment target remain open. Cross-project preference loading is untested. Access to the applicable ASD-STE100 standard and compliance verification are needed.

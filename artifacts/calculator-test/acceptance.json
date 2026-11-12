@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "actions": [
+    {"action": "expect_exists", "selector": "[aria-label='Calculator keypad']"},
+    {"action": "key", "key": "2"},
+    {"action": "key", "key": "+"},
+    {"action": "key", "key": "3"},
+    {"action": "key", "key": "Enter"},
+    {"action": "expect_text", "selector": "#display", "text": "5"},
+    {"action": "key", "key": "Escape"},
+    {"action": "expect_text", "selector": "#display", "text": "0"},
+    {"action": "click", "selector": "[data-digit='1']"},
+    {"action": "click", "selector": "[data-op='/']"},
+    {"action": "click", "selector": "[data-digit='0']"},
+    {"action": "click", "selector": "[data-action='equals']"},
+    {"action": "expect_text", "selector": "#display", "text": "Cannot divide by zero"}
+  ]
+}
