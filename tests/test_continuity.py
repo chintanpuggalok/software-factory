@@ -15,9 +15,15 @@ def read(path):
 
 class ContinuityInstructionTests(unittest.TestCase):
     def test_normal_work_continues_after_stage(self):
-        text = read(SKILLS / 'factory-autonomous/SKILL.md')
-        self.assertIn('Continue to the next authorized task', text)
-        self.assertIn('Do not stop at a milestone', text)
+        text = read(SKILLS / 'factory-route/SKILL.md')
+        self.assertIn('Continue authorized work until the completion criteria pass', text)
+        self.assertIn('checkable completion criteria', text)
+
+    def test_removed_overlapping_skills_stay_removed(self):
+        for name in ('factory-autonomous', 'factory-preferences', 'factory-eval'):
+            self.assertFalse((SKILLS / name).exists(), name)
+        self.assertIn('~/.pi/agent/preferences/index.md', read(SKILLS / 'factory-taste/SKILL.md'))
+        self.assertIn('approval or permission boundary', read(SKILLS / 'factory-learn/SKILL.md'))
 
     def test_failure_has_safe_recovery(self):
         text = read(SKILLS / 'factory-recover/SKILL.md')

@@ -15,9 +15,9 @@
 - The project-local `asd-ste100` skill is pinned to upstream commit `a4905d922500dd7530ca8a0eb9e4940494255709`. Its linter has not been executed.
 - Pi lists the original stage skills after reload. Automatic routing and a product walkthrough remain untested.
 - Added draft skills for routing, recovery, security, evaluation, and learning. See `research/starred-factories.md`.
-- A user-wide preference index exists outside this repository. An isolated local Pi install discovered all 28 package skills. GitHub installation and cross-project preference loading remain untested.
+- A user-wide preference index exists outside this repository. An isolated local Pi install discovered all 25 package skills. GitHub installation and cross-project preference loading remain untested.
 - An experimental workflow can plan and generate one static HTML prototype. A calculator test passed model-audited planning, fake-DOM checks, and selected isolated Chromium checks. Browser checks found contrast defects that were repaired manually. The coordinator does not deploy.
-- Skills now use one audit verdict contract. Every stage skill names its audit and advances only on PASS.
+- Skills now use one audit verdict contract. Every stage skill names its audit and advances only on PASS. An audit removed three overlapping skills and merged their unique content into route, taste, and learn.
 - Execution now goes through a selectable runtime adapter. Only `pi` is implemented. Codex and Claude fail closed. See `docs/runtime-adapters.md`.
 - An independent static review with `opencode-go/deepseek-v4.1-flash` accepted the gate-plumbing findings now applied. A live model smoke test of the new verdict contract was blocked by a provider usage limit.
 - Existing skill approval instructions predate the autonomous goal and require review. The goal does not authorize new spending, installations, or delegation.

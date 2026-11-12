@@ -12,7 +12,7 @@
 - Read project context and linked records selectively. Stop when the active task has enough information.
 - At stage changes, pass the goal, confirmed decisions, relevant artifact paths, open questions, and next action. Include verification evidence when relevant. Do not pass the full conversation.
 - Keep current decisions concise. Link to historical evidence instead of copying it into entry points.
-- Use `factory-recover` after interruption or failure. Use `factory-eval` to test changed skills. Use `factory-learn` after completed work or repeated failure.
+- Use `factory-recover` after interruption or failure. Use `factory-learn` after completed work, repeated failure, or a workflow change. It includes the bounded evaluation method.
 - Treat taste hypotheses as unconfirmed. Do not assume permission to spend, install, delegate, merge, or deploy.
 - Use subagents only with authorization and when a specific benefit exceeds the cost and coordination overhead. Otherwise work directly. Follow the global `pi-subagents` skill when available. When delegating, set one spending ceiling per task and do not cap the delegate's tool calls.
 - Use autoresearch only when the user requests an experiment loop. Follow the global autoresearch skill when available.

@@ -27,6 +27,7 @@ Build a Pi-based coordinator with durable project-local state. Test an end-to-en
 - Added optional isolated Chromium checks, one browser-repair attempt, and a bounded acceptance contract. An integrated calculator run passed 13 acceptance actions. See `artifacts/browser-acceptance-review.md`.
 - Applied the accepted findings from an independent static review. Every stage skill now names its audit, all ten audits share one verdict contract, release requires security evidence, artifact paths are defined, routing covers resume and all stages, and playbooks name their audits. See `artifacts/deepseek-skill-review.md`.
 - Added a runtime adapter layer. `pi` is implemented. `codex` and `claude` fail closed until implemented. Sixty-four tests pass.
+- Audited each skill for need and usage. Removed three overlapping skills: `factory-autonomous`, `factory-preferences`, and `factory-eval`. Their unique content moved to `factory-route`, `factory-taste`, and `factory-learn`. An isolated Pi install now discovers 25 skills with no diagnostics. Sixty-five tests pass. See `artifacts/skill-necessity-audit.md`.
 - The first review is in `artifacts/skill-review.md`. It predates the stage-specific audits.
 
 ## Next action

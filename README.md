@@ -65,7 +65,7 @@ Execution goes through a runtime adapter, selected with `--runtime pi|codex|clau
 
 ## What has been tested?
 
-**Skill discovery and fixed-stage execution:** Pi discovered 28 packaged skills in an isolated local installation. A real Pi workflow ran the idea, spec, design, architecture, and plan stages in a fixed sequence. The coordinator supplied the stage and audit instructions explicitly. This does not prove that an agent can automatically select the right skill or playbook for an arbitrary request.
+**Skill discovery and fixed-stage execution:** Pi discovered 25 packaged skills in an isolated local installation. A real Pi workflow ran the idea, spec, design, architecture, and plan stages in a fixed sequence. The coordinator supplied the stage and audit instructions explicitly. This does not prove that an agent can automatically select the right skill or playbook for an arbitrary request.
 
 **Calculator walkthrough:** A real Pi run generated a calculator prototype from a saved plan. Selected arithmetic, keyboard, click, accessibility-role, contrast, and viewport checks passed in isolated Chromium. A separate integration test passed 13 browser acceptance actions. Some repairs and test orchestration were manual. See `artifacts/calculator-test/review.md` and `artifacts/browser-acceptance-review.md`.
 
@@ -113,7 +113,7 @@ If you have a separate `project-start` skill installed, run `/skill:project-star
 
 Run `/reload` in an active session after installation. Installing the skills does not start an autonomous factory. The coordinator is still a prototype.
 
-Pi loads the package skills globally, but does not create or automatically load a personal preference index. Run `/skill:factory-preferences` to manage preferences. To load relevant preferences at project startup, add a short instruction to your own global agent rules after reviewing it. Keep your index at `~/.pi/agent/preferences/index.md`; do not commit personal preferences to a public repository.
+Pi loads the package skills globally, but does not create or automatically load a personal preference index. Run `/skill:factory-taste` to manage project and user-wide preferences. To load relevant preferences at project startup, add a short instruction to your own global agent rules after reviewing it. Keep your index at `~/.pi/agent/preferences/index.md`; do not commit personal preferences to a public repository.
 
 This package contains all factory skills, not just preference memory. A project-local copy can create name collisions. The project rules refer to optional global `project-start`, `pi-subagents`, and autoresearch guidance that is not included here. Other users must provide equivalent rules or adapt those references. A local package install and skill discovery passed in an isolated Pi configuration. GitHub installation and cross-project preference loading have not been tested.
 
