@@ -70,6 +70,7 @@ class OpenCodeAdapterTests(unittest.TestCase):
         self.assertEqual(argv[-2:], ['--', '--not-a-flag'])
         self.assertEqual(captured['cwd'], Path(directory).resolve())
         self.assertEqual(captured['env']['OPENCODE_DISABLE_PROJECT_CONFIG'], '1')
+        self.assertEqual(captured['env']['PWD'], str(Path(directory).resolve()))
         self.assertIn('"factory-readonly"', json.dumps(captured['config']))
         self.assertEqual(result.returncode, 0)
         self.assertEqual(result.stdout, 'ok')

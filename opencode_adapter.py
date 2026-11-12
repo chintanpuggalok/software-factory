@@ -75,10 +75,12 @@ def _write_config(config_root):
     return path
 
 
-def _call_environment(config_root):
+def _call_environment(config_root, workspace):
     env = dict(os.environ)
     env["XDG_CONFIG_HOME"] = str(config_root)
     env["OPENCODE_DISABLE_PROJECT_CONFIG"] = "1"
+    # OpenCode resolves its project location from PWD, not the process cwd.
+    env["PWD"] = str(workspace)
     return env
 
 
@@ -126,7 +128,7 @@ def _invoke(agent, read_allowed, workspace, prompt, *, subscription_confirmed, t
     config_root = Path(tempfile.mkdtemp(prefix="factory-opencode-"))
     try:
         _write_config(config_root)
-        return _run(argv, workspace, _call_environment(config_root), timeout)
+        return _run(argv, workspace, _call_environment(config_root, workspace), timeout)
     finally:
         shutil.rmtree(config_root, ignore_errors=True)
 
