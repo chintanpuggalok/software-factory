@@ -1,7 +1,8 @@
 # Runtime adapters
 
-The coordinator must not depend on Pi-specific code. The planning workflow calls
-a runtime adapter with one small contract.
+The Pi extension and the optional CLI both call the Python coordinator. The
+coordinator must not depend on Pi-specific code. The planning workflow calls a
+runtime adapter with one small contract.
 
 ## Contract
 

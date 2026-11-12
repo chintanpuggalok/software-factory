@@ -165,11 +165,15 @@ def main():
                     probe_fn=lambda path: browser_verify.probe(path, acceptance=acceptance))
                 state['prototype_path'] = browser_result['artifact']
                 state['browser_verification'] = browser_result
-                fd, evidence_path = tempfile.mkstemp(prefix='browser-evidence-', suffix='.json', dir=original.parent)
+                evidence_path = original.parent / 'browser-evidence.json'
+                fd, temp_evidence = tempfile.mkstemp(prefix='.evidence-', dir=original.parent)
                 with os.fdopen(fd, 'w', encoding='utf-8') as evidence:
                     json.dump(browser_result, evidence, indent=2)
                     evidence.write('\n')
-                state['browser_evidence_path'] = evidence_path
+                    evidence.flush()
+                    os.fsync(evidence.fileno())
+                os.replace(temp_evidence, evidence_path)
+                state['browser_evidence_path'] = str(evidence_path)
             except (OSError, ValueError, RuntimeError, subprocess.TimeoutExpired) as exc:
                 print(json.dumps(state, indent=2))
                 print(f"BLOCKED: prototype generation or verification failed: {exc}", file=sys.stderr)

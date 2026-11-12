@@ -8,7 +8,7 @@ Inspired by [Poteto's pstack](https://github.com/cursor/plugins/tree/main/pstack
 
 ## What you get
 
-- **25 agent skills:** 14 workflow skills plus 10 stage audits and the ASD-STE100 writing skill.
+- **26 agent skills:** 15 workflow skills, 10 stage audits, and the ASD-STE100 writing skill. The package is self-contained. No external skill is required.
 - **One coordinator:** Python, project-local state, resumable stages.
 - **One audit contract:** `PASS: evidence`, `REVISE: findings`, `BLOCKED: reason`. Work advances only on PASS.
 - **Optional browser checks:** isolated Chromium with an acceptance contract.
@@ -27,15 +27,17 @@ Idea → Spec → Design → Architecture → Plan → Build → Verify → Rele
 
 Stages can overlap. Small changes skip stages. Every stage has an audit with one verdict contract.
 
-## Install the skills
+## Install the package
 
-Requires [Pi](https://pi.dev). Review the repository before installing it.
+Requires [Pi](https://pi.dev) and `python3`. Review the repository before installing it.
 
 ```sh
 pi install git:github.com/chintanpuggalok/software-factory
 ```
 
-Then run `/reload` in an active session.
+This installs the skills and the `/factory-*` commands. Run `/reload` in an active session, then run `/factory-status` in any project.
+
+An isolated local install confirmed that Pi discovers the extension and all 26 skills from the package. GitHub installation and cross-project preference loading are untested.
 
 ## Use the skills
 
@@ -50,18 +52,19 @@ pi
 Inside Pi:
 
 ```text
-/skill:project-start      # if you have this global skill
+/skill:factory-project-start
 /skill:factory-route
 ```
 
-Describe the idea. `factory-route` records the goal, scope, release target, and completion criteria, then selects the next stage.
+Describe the idea. `factory-project-start` loads or creates the project continuity files. `factory-route` records the goal, scope, release target, and completion criteria, then selects the next stage.
 
-If you do not have `project-start`, ask Pi to create `AGENTS.md`, `CONTEXT.md`, and `PLAN.md` first. Project rules and current requests take precedence over skill defaults.
+The package includes its own startup skill. You do not need a global `project-start` skill.
 
 ### Run one stage directly
 
 | Command | Use when |
 |---|---|
+| `/skill:factory-project-start` | Starting or resuming substantive product work |
 | `/skill:factory-route` | Work enters the factory, or earlier work resumes |
 | `/skill:factory-idea` | Shaping a raw idea |
 | `/skill:factory-spec` | Defining scope and acceptance criteria |
@@ -79,51 +82,55 @@ If you do not have `project-start`, ask Pi to create `AGENTS.md`, `CONTEXT.md`, 
 
 Use one workflow skill per stage. Load the matching `audit-*` skill when the output is ready. Do not advance on `REVISE` or `BLOCKED`.
 
+Delegation is optional. If you use subagents, follow your harness's rules. The factory rules in this package remain in force.
+
 Preference memory is optional. Project preferences live in the product. User-wide preferences default to `~/.pi/agent/preferences/index.md`. Do not commit personal preferences to a public repository.
 
-## Use the coordinator
+## Use the factory in Pi
 
-The coordinator is a prototype CLI. It writes only under the target project's `.factory/` and `.factory-build/` directories.
+The package registers a Pi extension. You do not run a CLI.
+
+| Command | What it does | Model calls |
+|---|---|---|
+| `/factory-status` | Show the saved run, stage verdicts, and verification state | None |
+| `/factory-simulate <goal>` | Run the deterministic eight-stage simulation | None |
+| `/factory-plan <goal>` | Run idea, spec, design, architecture, and plan with one audit per stage | Up to 10 |
+| `/factory-build <goal>` | Resume the plan, generate one static prototype, and verify it | Plan remainder + up to 3 |
+| `/factory-resume` | Repeat the last plan or build command for this project | Same as the last run |
+
+Examples:
+
+```text
+/factory-simulate A local checklist app for one person
+
+/factory-plan A local checklist app for one person --research-query=task management software
+
+/factory-build A local checklist app for one person --acceptance-file=.factory/acceptance.json
+
+/factory-status
+```
+
+`/factory-plan` and `/factory-build` ask for confirmation in the TUI. In print or automation mode they require `--yes`. Confirmation is an attestation about spending. No dollar limit is enforced. Codex and Claude runtimes are not implemented.
+
+The extension writes only under the target project's `.factory/` and `.factory-build/` directories. It runs the bundled Python coordinator from the package, so it needs `python3`.
 
 ### Requirements
 
 - Python 3.10 or later.
-- Pi for real model calls.
 - Node.js 22+ for browser checks.
 - Chromium and Bubblewrap (`bwrap`) for isolated browser checks. Both are optional.
 
-### Simulate a full cycle
+### Options
 
-No model calls and no external effects.
-
-```sh
-python3 factory.py /path/to/test-project --goal "Example product"
-python3 factory.py /path/to/test-project --goal "Example product" --fail-stage verify
+```text
+--yes                                  Confirm model calls without the interactive prompt
+--research-query=<terms>               Send a public query to Wikipedia. Do not include secrets
+--reference-url=<https url>            Inspect up to three approved public hosts, static HTML only
+--acceptance-file=<path>               Browser acceptance actions for the generated prototype
+--build                                Generate the prototype after a passed plan
 ```
 
-### Plan with a real model
-
-```sh
-python3 factory.py /path/to/test-project \
-  --mode pi-plan --subscription-confirmed \
-  --goal "A local checklist app for one person"
-```
-
-This makes up to ten calls: one stage output and one audit for each of idea, spec, design, architecture, and plan. A failed audit stops the run and saves its verdict.
-
-Optional:
-
-```sh
-  --research-query "public market search terms"   # sent to Wikipedia; no secrets
-  --reference-url https://www.calculator.net/     # up to three approved hosts
-  --build-static                                  # generate one static HTML prototype
-  --acceptance-file /path/to/acceptance.json      # browser acceptance actions
-  --runtime pi                                    # codex and claude are not implemented
-```
-
-`--subscription-confirmed` is an attestation, not billing verification. The coordinator does not enforce a dollar limit.
-
-### What `--build-static` does
+### What build does
 
 1. Generates one new `.factory-build/index.html`. It never overwrites an existing prototype.
 2. Runs limited structural checks and adds a hash to `verification.json`.
@@ -164,13 +171,23 @@ Open `http://127.0.0.1:8000`.
 
 ```sh
 python3 -m unittest discover -s tests -v
+node --test tests/test_extension_core.mjs
 ```
 
-The suite covers state recovery, audit gating, planning, structural and browser verification, sandbox network isolation, and skill contracts. Browser tests skip when Chromium is unavailable.
+The suites cover state recovery, audit gating, planning, structural and browser verification, sandbox network isolation, extension argument parsing, and skill contracts. Browser tests skip when Chromium is unavailable.
+
+### Optional CLI
+
+For CI or manual runs, the same coordinator is available directly:
+
+```sh
+python3 factory.py /path/to/project --goal "Example product"
+python3 factory.py /path/to/project --mode pi-plan --subscription-confirmed --goal "Example product"
+```
 
 ## Runtime adapters
 
-`--runtime` selects the execution adapter. Only `pi` is implemented and tested. `codex` and `claude` fail closed before any process starts.
+The Pi extension and the optional CLI both call the same Python coordinator. `--runtime` selects the execution adapter. Only `pi` is implemented and tested. `codex` and `claude` fail closed before any process starts.
 
 To add one, follow `docs/runtime-adapters.md`. Do not copy Pi flags into another harness without verifying its documented behavior.
 
@@ -178,11 +195,12 @@ To add one, follow `docs/runtime-adapters.md`. Do not copy Pi flags into another
 
 **Verified:**
 
-- 25 skills discovered from an isolated local package install, with no diagnostics.
+- 26 skills discovered from an isolated local package install, with no diagnostics.
 - Fixed-stage planning over Pi, with one audit per stage.
 - Calculator prototype passing 13 browser acceptance actions.
 - Sandbox network isolation, interrupted-build recovery, and bounded repair.
-- 65 automated tests.
+- 65 Python tests and 7 extension tests.
+- The Pi extension ran `/factory-status` and `/factory-simulate` in print mode without a CLI or model call.
 
 **Unverified:**
 
@@ -219,6 +237,7 @@ This comparison uses the [pstack README at commit `c742dd6`](https://github.com/
 - `research/`: source-based evaluations.
 - `artifacts/`: reviews, tests, and the calculator prototype.
 - `.agents/skills/`: workflow, audit, and STE skills.
+- `extensions/`: the Pi extension and its testable core.
 
 ## Third-party material
 

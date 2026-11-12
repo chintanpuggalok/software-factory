@@ -2,9 +2,10 @@
   "name": "software-factory-skills",
   "version": "0.1.0",
   "private": true,
-  "description": "Draft product-to-release skills for Pi",
+  "description": "Product-to-release factory skills and a Pi coordinator extension",
   "keywords": ["pi-package"],
   "pi": {
+    "extensions": ["./extensions/factory.ts"],
     "skills": ["./.agents/skills"]
   }
 }
