@@ -1,0 +1,39 @@
+PASS /add (200, {'result': -9.75})
+PASS /subtract (200, {'result': -5.0})
+PASS /multiply (200, {'result': 28.0})
+PASS /divide (200, {'result': 3.5})
+PASS /divide 400 {'error': 'Division by zero is not allowed.'}
+PASS /add 400 {'error': 'Operands must be finite numbers.'}
+PASS /add 400 {'error': 'Body must be valid JSON.'}
+PASS /add 400 {'error': 'Body must contain only a and b.'}
+PASS /unknown 404 {'error': 'Unknown endpoint.'}
+PASS GET 405 {'error': 'Use POST.'}
+test_arithmetic_over_http (test_calculator.CalculatorTests.test_arithmetic_over_http) ... 127.0.0.1 - - [15/Nov/2026 02:38:11] "POST /add HTTP/1.1" 200 -
+127.0.0.1 - - [15/Nov/2026 02:38:11] "POST /subtract HTTP/1.1" 200 -
+127.0.0.1 - - [15/Nov/2026 02:38:11] "POST /multiply HTTP/1.1" 200 -
+127.0.0.1 - - [15/Nov/2026 02:38:11] "POST /divide HTTP/1.1" 200 -
+127.0.0.1 - - [15/Nov/2026 02:38:11] "POST /add HTTP/1.1" 200 -
+ok
+test_bad_inputs_over_http (test_calculator.CalculatorTests.test_bad_inputs_over_http) ... 127.0.0.1 - - [15/Nov/2026 02:38:11] "POST /add HTTP/1.1" 400 -
+127.0.0.1 - - [15/Nov/2026 02:38:11] "POST /add HTTP/1.1" 400 -
+127.0.0.1 - - [15/Nov/2026 02:38:11] "POST /add HTTP/1.1" 400 -
+127.0.0.1 - - [15/Nov/2026 02:38:11] "POST /add HTTP/1.1" 400 -
+127.0.0.1 - - [15/Nov/2026 02:38:11] "POST /add HTTP/1.1" 400 -
+127.0.0.1 - - [15/Nov/2026 02:38:11] "POST /add HTTP/1.1" 400 -
+127.0.0.1 - - [15/Nov/2026 02:38:11] "POST /add HTTP/1.1" 400 -
+127.0.0.1 - - [15/Nov/2026 02:38:11] "POST /add HTTP/1.1" 400 -
+127.0.0.1 - - [15/Nov/2026 02:38:11] "POST /add HTTP/1.1" 400 -
+127.0.0.1 - - [15/Nov/2026 02:38:11] "POST /add HTTP/1.1" 400 -
+127.0.0.1 - - [15/Nov/2026 02:38:11] "POST /divide HTTP/1.1" 400 -
+127.0.0.1 - - [15/Nov/2026 02:38:11] "POST /add HTTP/1.1" 413 -
+127.0.0.1 - - [15/Nov/2026 02:38:11] "POST /add HTTP/1.1" 415 -
+127.0.0.1 - - [15/Nov/2026 02:38:11] "POST /unknown HTTP/1.1" 404 -
+127.0.0.1 - - [15/Nov/2026 02:38:11] "GET /add HTTP/1.1" 405 -
+ok
+test_core_boundary (test_calculator.CalculatorTests.test_core_boundary) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.523s
+
+OK
+Both commands exit 0

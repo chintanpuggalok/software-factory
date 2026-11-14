@@ -1,0 +1,30 @@
+test_arithmetic_over_http (test_calculator.CalculatorTests.test_arithmetic_over_http) ... 127.0.0.1 - - [15/Nov/2026 02:36:27] "POST /add HTTP/1.1" 200 -
+127.0.0.1 - - [15/Nov/2026 02:36:27] "POST /subtract HTTP/1.1" 200 -
+127.0.0.1 - - [15/Nov/2026 02:36:27] "POST /multiply HTTP/1.1" 200 -
+127.0.0.1 - - [15/Nov/2026 02:36:27] "POST /divide HTTP/1.1" 200 -
+127.0.0.1 - - [15/Nov/2026 02:36:27] "POST /add HTTP/1.1" 200 -
+ok
+test_bad_inputs_over_http (test_calculator.CalculatorTests.test_bad_inputs_over_http) ... 127.0.0.1 - - [15/Nov/2026 02:36:27] "POST /add HTTP/1.1" 400 -
+127.0.0.1 - - [15/Nov/2026 02:36:27] "POST /add HTTP/1.1" 400 -
+127.0.0.1 - - [15/Nov/2026 02:36:27] "POST /add HTTP/1.1" 400 -
+127.0.0.1 - - [15/Nov/2026 02:36:27] "POST /add HTTP/1.1" 400 -
+127.0.0.1 - - [15/Nov/2026 02:36:27] "POST /add HTTP/1.1" 400 -
+127.0.0.1 - - [15/Nov/2026 02:36:27] "POST /add HTTP/1.1" 400 -
+127.0.0.1 - - [15/Nov/2026 02:36:27] "POST /add HTTP/1.1" 400 -
+127.0.0.1 - - [15/Nov/2026 02:36:27] "POST /add HTTP/1.1" 400 -
+127.0.0.1 - - [15/Nov/2026 02:36:27] "POST /add HTTP/1.1" 400 -
+127.0.0.1 - - [15/Nov/2026 02:36:27] "POST /add HTTP/1.1" 400 -
+127.0.0.1 - - [15/Nov/2026 02:36:27] "POST /divide HTTP/1.1" 400 -
+127.0.0.1 - - [15/Nov/2026 02:36:27] "POST /add HTTP/1.1" 413 -
+127.0.0.1 - - [15/Nov/2026 02:36:27] "POST /add HTTP/1.1" 415 -
+127.0.0.1 - - [15/Nov/2026 02:36:27] "POST /unknown HTTP/1.1" 404 -
+127.0.0.1 - - [15/Nov/2026 02:36:27] "GET /add HTTP/1.1" 405 -
+ok
+test_core_boundary (test_calculator.CalculatorTests.test_core_boundary) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.521s
+
+OK
+
+Exit code: 0

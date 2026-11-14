@@ -1,0 +1,8 @@
+add {"result": 9.0}
+subtract {"result": 3.0}
+multiply {"result": 18.0}
+divide {"result": 2.0}
+{"error": "Division by zero is not allowed."} HTTP 400
+{"error": "Operands must be finite numbers."} HTTP 400
+{"error": "Body must be valid JSON."} HTTP 400
+Exit code: 0
