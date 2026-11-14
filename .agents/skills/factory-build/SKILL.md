@@ -5,10 +5,11 @@ description: Implement an approved product plan. Use when authorized implementat
 
 # Build the change
 
-1. Read the approved scope, plan, design brief, and applicable project rules.
-2. Implement bounded changes. Add or update tests for changed behavior.
-3. Use subagents only when delegation is authorized and provides a clear benefit. If your harness provides delegation guidance, follow it. Give each agent a bounded task, relevant context, and one spending ceiling. Do not cap the delegate's tool calls. Do not delegate secrets.
-4. Run relevant checks. Record results and remaining risks. Preserve unrelated work.
-5. Send the change to `audit-build`. Advance only after `PASS: evidence`. At each stage change, hand over the goal, confirmed decisions, artifact paths, open questions, and next action. Include check results. Load `factory-verify` or `factory-visual-review` only when that stage starts.
+1. Read the approved scope, plan, architecture, design brief, and project rules.
+2. Apply low-level principles: pure core domain logic, imperative I/O shell at module edges, guard clauses for flat control flow, strict boundary types, and structured errors. Never swallow errors silently.
+3. For Cloudflare projects, load `workers-best-practices`, `cloudflare-app-bootstrap`, and `workers-development`. Use the `cf` CLI unless the project has a Wrangler config file (`wrangler.jsonc`, `wrangler.json`, or `wrangler.toml`).
+4. When the user authorizes delegation and parallel work helps, delegate bounded Cloudflare service, UI, or test tasks to subagents with one spending ceiling per task. Never delegate secrets.
+5. Add or update behavior tests at module boundaries. Run relevant checks and preserve unrelated work.
+6. Send the change to `audit-build`. Advance only after `PASS: evidence`. Pass `factory-verify` the goal, decisions, artifact paths, check results, and next action.
 
-Do not install dependencies, spend, merge, or deploy without required approval. Do not claim unrun checks passed.
+Do not install dependencies, spend, merge, or deploy without authorization. Do not claim unrun checks passed.

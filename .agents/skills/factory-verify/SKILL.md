@@ -1,13 +1,15 @@
 ---
 name: factory-verify
-description: Verify implementation against the spec and user scenarios. Use after implementation or before release.
+description: Check implementation behavior, interface quality, and trust boundaries before release. Use after build work.
 ---
 
-# Verify behavior
+# Check behavior, interface, and security
 
-1. Read the approved spec, plan, and change summary.
-2. Run relevant unit, integration, and end-to-end checks when available. Record commands and results.
-3. Check important user scenarios independently of implementation details. Keep holdout cases separate from the implementer when feasible. Do not claim independence otherwise.
-4. Report failures, missing coverage, and untested risks. Repair within authorized scope and repeat affected checks.
+1. Read the spec, design brief, plan, taste index, and `git diff` surface.
+2. Run unit, integration, and end-to-end checks (including local `cf dev` or `wrangler dev` checks for Cloudflare apps) when available. Record commands, exit codes, and results.
+3. Check the pre-build user scenarios independently of implementation details. Report when holdout separation is unavailable.
+4. For UI changes, inspect the running interface in a browser when available. Check core flows, screen sizes, accessibility, loading, empty, and error states, and zero console or network errors. Report when browser inspection is unavailable.
+5. For trust boundaries, check authentication, authorization, input parsing, secrets isolation, Cloudflare binding permissions, dependencies, and logging. Never read or disclose secrets.
+6. Repair defects within authorized scope and rerun affected checks.
 
-Do not mark a failed or untested requirement as passed. Send the evidence to `audit-verify`. Advance only after `PASS: evidence`. At the stage change, hand `factory-release` the goal, confirmed decisions, artifact paths, open questions, next action, and check results.
+Do not mark a failed or unrun check as passed. Send the evidence to `audit-verify`. Advance only after `PASS: evidence`. Pass `factory-release` the goal, decisions, artifact paths, check results, and next action.

@@ -13,7 +13,9 @@ import {
   parseFactoryCommand,
   parsePlanArgs,
   parseProgress,
+  presentStageSummary,
   readStatus,
+  renderCollapsedLines,
   renderRunLines,
   renderIdleLines,
   runCoordinator,
@@ -24,7 +26,7 @@ import {
 test('tokenizes quoted goals', () => {
   assert.deepEqual(parsePlanArgs('"a checklist app" --yes'), {
     goal: 'a checklist app',
-    options: { yes: true, researchQuery: null, referenceUrls: [], acceptanceFile: null, build: false, simulate: false, runtime: null },
+    options: { yes: true, researchQuery: null, referenceUrls: [], acceptanceFile: null, build: false, simulate: false, runtime: null, collapsed: null },
   });
 });
 
@@ -152,7 +154,7 @@ test('resolves the next action from saved state', () => {
 });
 
 test('parses the single entry command without a goal', () => {
-  assert.deepEqual(parseFactoryArgs(''), { goal: '', options: { yes: false, researchQuery: null, referenceUrls: [], acceptanceFile: null, build: false, simulate: false, runtime: null } });
+  assert.deepEqual(parseFactoryArgs(''), { goal: '', options: { yes: false, researchQuery: null, referenceUrls: [], acceptanceFile: null, build: false, simulate: false, runtime: null, collapsed: null } });
   assert.equal(parseFactoryArgs('--simulate').options.simulate, true);
   assert.match(parsePlanArgs('goal --simulate').error, /Unknown option/);
 });
@@ -179,4 +181,48 @@ test('keeps the runtime option with the parsed subcommand', () => {
   assert.equal(parsed.command, 'plan');
   assert.equal(parsed.goal, 'my app');
   assert.equal(parsed.options.runtime, 'opencode');
+});
+
+test('renders collapsed widget showing present stage and status', () => {
+  let model = emptyModel({ goal: 'demo', collapsed: true });
+  assert.equal(presentStageSummary(model).stage, 'idea');
+  assert.equal(presentStageSummary(model).state, 'pending');
+
+  model = applyProgress(model, { event: 'stage_start', stage: 'idea' });
+  model = applyProgress(model, { event: 'stage_result', stage: 'idea', passed: true, verdict: 'PASS: ok' });
+  model = applyProgress(model, { event: 'stage_start', stage: 'spec' });
+
+  const lines = renderRunLines(model, 64);
+  assert.equal(lines.length, 3);
+  assert(lines[0].includes('factory [+]'));
+  assert(lines[1].includes('● spec: auditing… (1/5) · demo'));
+  assert(lines.every((line) => Array.from(line).length <= 64));
+
+  model = applyProgress(model, { event: 'stage_result', stage: 'spec', passed: false, verdict: 'BLOCKED: missing spec' });
+  const blockedLines = renderCollapsedLines(model, 64);
+  assert.equal(blockedLines.length, 3);
+  assert(blockedLines[1].includes('✗ spec: blocked (1/5)'));
+
+  const idleCollapsed = renderIdleLines(50, { collapsed: true });
+  assert.equal(idleCollapsed.length, 3);
+  assert(idleCollapsed[1].includes('○ idle: no saved run'));
+});
+
+test('uses a compact single line at phone-sized terminal widths', () => {
+  const model = emptyModel({ goal: 'demo' });
+  for (const width of [1, 10, 20, 30, 39]) {
+    for (const lines of [renderRunLines(model, width), renderCollapsedLines(model, width), renderIdleLines(width)]) {
+      assert.equal(lines.length, 1);
+      assert(lines.every((line) => line.length <= width));
+    }
+  }
+});
+
+test('parses collapse, expand, toggle, and hide commands and flags', () => {
+  assert.equal(parseFactoryCommand('collapse').command, 'collapse');
+  assert.equal(parseFactoryCommand('expand').command, 'expand');
+  assert.equal(parseFactoryCommand('toggle').command, 'toggle');
+  assert.equal(parseFactoryCommand('hide').command, 'hide');
+  assert.equal(parseFactoryCommand('plan demo --collapsed').options.collapsed, true);
+  assert.equal(parseFactoryCommand('status --expand').options.collapsed, false);
 });

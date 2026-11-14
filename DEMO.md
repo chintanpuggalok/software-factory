@@ -8,7 +8,13 @@ This demo records one real agent-led run. It does not establish production readi
 - Python 3 for this example.
 - Permission to use the selected model. Usage may incur charges. The agent-led path does not enforce a dollar limit.
 
-The run below used the **local development version** of the factory. In that version, `/factory <goal>` starts an agent turn in interactive Pi. Do not assume an older installed package has the same behavior. Reload Pi after updating the extension. The agent-led command does not run in Pi print mode.
+Install or update the factory package in Pi:
+
+```sh
+pi install git:github.com/chintanpuggalok/software-factory
+```
+
+If the package is already installed, use `pi update` and reload the active Pi session with `/reload`. `/factory <goal>` starts an agent turn in interactive Pi. Older package versions may behave differently. The agent-led command does not run in Pi print mode.
 
 ## Start a factory run
 

@@ -54,7 +54,7 @@ export function parseFactoryArgs(text) {
 function parseArgs(text, { requireGoal = true, allowSimulate = false } = {}) {
   const { tokens, error } = tokenize(text || '');
   if (error) return { error };
-  const options = { yes: false, researchQuery: null, referenceUrls: [], acceptanceFile: null, build: false, simulate: false, runtime: null };
+  const options = { yes: false, researchQuery: null, referenceUrls: [], acceptanceFile: null, build: false, simulate: false, runtime: null, collapsed: null };
   const goal = [];
   for (let i = 0; i < tokens.length; i++) {
     const token = tokens[i];
@@ -62,10 +62,12 @@ function parseArgs(text, { requireGoal = true, allowSimulate = false } = {}) {
     const split = token.indexOf('=');
     const name = split === -1 ? token : token.slice(0, split);
     let value = split === -1 ? null : token.slice(split + 1);
-    if (name === '--yes' || name === '--build' || name === '--simulate') {
+    if (name === '--yes' || name === '--build' || name === '--simulate' || name === '--collapsed' || name === '--expand') {
       if (split !== -1) return { error: `${name} does not take a value` };
       if (name === '--yes') options.yes = true;
       else if (name === '--build') options.build = true;
+      else if (name === '--collapsed') options.collapsed = true;
+      else if (name === '--expand') options.collapsed = false;
       else {
         if (!allowSimulate) return { error: 'Unknown option --simulate' };
         options.simulate = true;
@@ -91,7 +93,7 @@ function parseArgs(text, { requireGoal = true, allowSimulate = false } = {}) {
   return { goal: goal.join(' '), options };
 }
 
-export const FACTORY_COMMANDS = ['status', 'plan', 'build', 'simulate', 'resume', 'help'];
+export const FACTORY_COMMANDS = ['status', 'plan', 'build', 'simulate', 'resume', 'collapse', 'expand', 'toggle', 'hide', 'help'];
 
 export function parseFactoryCommand(text) {
   const parsed = parseFactoryArgs(text);
@@ -232,11 +234,12 @@ export function summarizeStatus(status) {
 
 export const PLANNING_STAGES = ['idea', 'spec', 'design', 'architecture', 'plan'];
 
-export function emptyModel({ goal, runtime = 'pi', limit = 10 }) {
+export function emptyModel({ goal, runtime = 'pi', limit = 10, collapsed = false }) {
   return {
     goal,
     runtime,
     limit,
+    collapsed: Boolean(collapsed),
     stages: PLANNING_STAGES.map((name) => ({ name, state: 'pending', verdict: '' })),
     blocked: null,
     verification: null,
@@ -281,10 +284,86 @@ function padRight(text, width) {
   return value + ' '.repeat(Math.max(0, width - Array.from(value).length));
 }
 
-export function renderRunLines(model, width = 64) {
+export function presentStageSummary(model) {
+  const stages = Array.isArray(model?.stages) ? model.stages : [];
+  const total = stages.length || PLANNING_STAGES.length;
+  const done = stages.filter((s) => s.state === 'passed').length;
+  const running = stages.find((s) => s.state === 'running');
+  if (running) {
+    return {
+      stage: running.name,
+      state: 'running',
+      glyph: GLYPH.running,
+      detail: `auditing… (${done}/${total})`,
+    };
+  }
+  const blockedStage = model?.blocked?.stage || stages.find((s) => s.state === 'blocked')?.name;
+  if (blockedStage) {
+    const reason = model?.blocked?.verdict || stages.find((s) => s.name === blockedStage)?.verdict || 'blocked';
+    return {
+      stage: blockedStage,
+      state: 'blocked',
+      glyph: GLYPH.blocked,
+      detail: `blocked (${done}/${total}) · ${reason}`,
+    };
+  }
+  if (total > 0 && done === total) {
+    if (model?.verification) {
+      const st = model.verification.static || 'unknown';
+      const br = model.verification.browser || 'unknown';
+      const ok = st === 'passed' && (br === 'passed' || br === 'unavailable');
+      return {
+        stage: 'verify',
+        state: ok ? 'passed' : 'blocked',
+        glyph: ok ? GLYPH.passed : GLYPH.blocked,
+        detail: `static ${st} · browser ${br}`,
+      };
+    }
+    return {
+      stage: stages[total - 1].name,
+      state: 'passed',
+      glyph: GLYPH.passed,
+      detail: `passed (${done}/${total}) · ready to build`,
+    };
+  }
+  const nextPending = stages.find((s) => s.state === 'pending') || stages[0] || { name: 'idea', state: 'pending' };
+  return {
+    stage: nextPending.name,
+    state: nextPending.state || 'pending',
+    glyph: GLYPH[nextPending.state] || GLYPH.pending,
+    detail: `${nextPending.state || 'pending'} (${done}/${total})`,
+  };
+}
+
+function renderNarrow(model, width) {
+  const current = presentStageSummary(model);
+  const line = `Factory: ${current.stage} ${current.state}`;
+  return [line.slice(0, Math.max(0, width))];
+}
+
+export function renderCollapsedLines(model, width = 64) {
+  if (width < 40) return renderNarrow(model, width);
+  const inner = Math.max(24, Math.min(96, width)) - 2;
+  const title = ' factory [+] ';
+  const side = Math.max(0, inner - title.length);
+  const top = '╭' + '─'.repeat(Math.floor(side / 2)) + title + '─'.repeat(side - Math.floor(side / 2)) + '╮';
+  const bottom = '╰' + '─'.repeat(inner) + '╯';
+  const current = presentStageSummary(model);
+  const goalText = model?.goal ? ` · ${model.goal}` : '';
+  const summary = `${current.glyph} ${current.stage}: ${current.detail}${goalText}`;
+  return [
+    top,
+    '│ ' + padRight(summary, inner - 1) + '│',
+    bottom,
+  ];
+}
+
+export function renderRunLines(model, width = 64, { collapsed = Boolean(model?.collapsed) } = {}) {
+  if (width < 40) return renderNarrow(model, width);
+  if (collapsed) return renderCollapsedLines(model, width);
   const inner = Math.max(24, Math.min(96, width)) - 2;
   const lines = [];
-  const title = ' factory ';
+  const title = ' factory [-] ';
   const side = Math.max(0, inner - title.length);
   lines.push('╭' + '─'.repeat(Math.floor(side / 2)) + title + '─'.repeat(side - Math.floor(side / 2)) + '╮');
   const put = (text) => lines.push('│ ' + padRight(text, inner - 1) + '│');
@@ -303,23 +382,29 @@ export function renderRunLines(model, width = 64) {
     put(clip(`static ${model.verification.static || 'unknown'} · browser ${model.verification.browser || 'unknown'}`, inner));
   }
   put('');
-  put(model.next || '/factory status · /factory help · ctrl+c stops the run');
+  put(model.next || '/factory collapse · /factory status · ctrl+c stops');
   lines.push('╰' + '─'.repeat(inner) + '╯');
   return lines;
 }
 
-export function renderIdleLines(width = 64) {
+export function renderIdleLines(width = 64, { collapsed = false } = {}) {
+  if (width < 40) return ['Factory: /factory <goal>'.slice(0, Math.max(0, width))];
   const inner = Math.max(24, Math.min(96, width)) - 2;
   const put = (text) => '│ ' + padRight(text, inner - 1) + '│';
-  const title = ' factory ';
+  const title = collapsed ? ' factory [+] ' : ' factory [-] ';
   const side = Math.max(0, inner - title.length);
+  const top = '╭' + '─'.repeat(Math.floor(side / 2)) + title + '─'.repeat(side - Math.floor(side / 2)) + '╮';
+  const bottom = '╰' + '─'.repeat(inner) + '╯';
+  if (collapsed) {
+    return [top, put('○ idle: no saved run · /factory <goal>'), bottom];
+  }
   return [
-    '╭' + '─'.repeat(Math.floor(side / 2)) + title + '─'.repeat(side - Math.floor(side / 2)) + '╮',
+    top,
     put('No saved run in this project.'),
-    put('/factory <goal>   plan, build, and verify'),
-    put('/factory status   show saved state'),
-    put('/factory help     all commands'),
-    '╰' + '─'.repeat(inner) + '╯',
+    put('/factory <goal>     plan, build, and verify'),
+    put('/factory collapse   toggle compact 1-line view'),
+    put('/factory help       all commands'),
+    bottom,
   ];
 }
 
